@@ -1,14 +1,12 @@
 import pygame
 import sys
 import os  # You can remove this unless you're loading assets
+from constants import *
 
 # Initialize Pygame
 pygame.init()
 
-# Define colors
-RED = (255, 0, 0)
-GRAY = (169, 169, 169)
-BLACK = (0, 0, 0)
+
 
 class LifeBar:
     def __init__(self, max_life, x, y, width, height):
@@ -18,29 +16,32 @@ class LifeBar:
         self.y = y
         self.width = width
         self.height = height
+        self.font = pygame.font.SysFont(None, 24)
 
-    def update(self, new_life):
-        """Update the current life."""
-        self.current_life = max(0, min(new_life, self.max_life))
 
     def draw(self, surface):
         """Draw the life bar on the screen."""
         # Draw background (gray)
-        pygame.draw.rect(surface, GRAY, (self.x, self.y, self.width, self.height))
+        pygame.draw.rect(surface, GREY, (self.x, self.y, self.width, self.height))
 
         # Draw foreground (red)
         life_percentage = self.current_life / self.max_life
         life_width = self.width * life_percentage
-        pygame.draw.rect(surface, RED, (self.x, self.y, life_width, self.height))
+        pygame.draw.rect(surface, GREEN, (self.x, self.y, life_width, self.height))
 
         # Optional: border
         pygame.draw.rect(surface, BLACK, (self.x, self.y, self.width, self.height), 2)
+        life_text = f"{int(self.current_life)}%"
+        text_surface = self.font.render(life_text, True, BLACK)  # Render text
+        text_rect = text_surface.get_rect(center=(self.x + self.width // 2, self.y + self.height // 2))
+        surface.blit(text_surface, text_rect) 
 
-    def take_damage(self, amount):
-        self.current_life = max(0, self.current_life - amount)
+    def update(self, amount):
+        if (amount < 0):
+            self.current_life = max(0, self.current_life - amount)
+        else:
+            self.current_life = min(self.max_life, self.current_life - amount)
 
-    def heal(self, amount):
-        self.current_life = min(self.max_life, self.current_life + amount)
-    
+   
     def die(self):
         return self.current_life == 0
