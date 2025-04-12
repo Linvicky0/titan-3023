@@ -37,7 +37,7 @@ class Block(BaseTile):
         if not img:
             self.image.fill(BROWN)
         else:
-            self.image = pygame.transform.scale(img, (TILE_SIZE, TILE_SIZE))
+            self.image = pygame.transform.scale(img, (TILE_SIZE-7, TILE_SIZE-7))
             self.rect = self.image.get_rect(topleft=(x * TILE_SIZE, y * TILE_SIZE))
 
 

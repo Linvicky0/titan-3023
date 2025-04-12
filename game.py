@@ -48,6 +48,8 @@ def check_collision(creature, dx, dy):
         rain_hits = pygame.sprite.spritecollide(creature, rain_group, False)
         if rain_hits:
             creature.life_bar.update(0.1)
+            creature.speed = 2
+
 
 class Map:
 
@@ -90,9 +92,9 @@ class Game:
     def __init__(self, num_tiles = 16):
         self.player = Player(0, 0)
         self.tiles = [[0] * num_tiles] * num_tiles
-        print(len(sprite_group)) # 1 player = 1 sprite
+        # print(len(sprite_group)) # 1 player = 1 sprite
         self.map = Map(self.player, self)
-        print(len(sprite_group)) # 16 * 16 = 256 sprites
+        # print(len(sprite_group)) # 16 * 16 = 256 sprites
         self.running = True
         self.last_rain_time = time.time()
         self.rain_interval = random.randint(15, 30)  # Random interval between rain events
