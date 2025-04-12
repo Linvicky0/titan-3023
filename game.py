@@ -28,15 +28,16 @@ def check_collision(creature, dx, dy):
         
         elif (isinstance(block, Block) and block != creature):
             creature.move(-1 * dx, -1 * dy) # undo the move if this is a block collision
-
-        elif isinstance(block, Player) and isinstance(creature, Monster):
-                block.life_bar.update(1)
-
-        elif isinstance(creature, Player) and isinstance(block, Monster):
-                creature.life_bar.update(1)  
-
         elif (isinstance(block, Collectible) and isinstance(creature, Player)): # object is a collectible
             block.collect_item(creature)
+            
+        if isinstance(block, Player) and isinstance(creature, Monster):
+                block.life_bar.update(1)
+
+        if isinstance(creature, Player) and isinstance(block, Monster):
+                creature.life_bar.update(1)  
+
+        
 
 class Map:
 
