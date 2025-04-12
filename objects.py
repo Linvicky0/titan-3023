@@ -63,7 +63,6 @@ class Collectible(BaseTile):
 class Monster(Block):
     
     def __init__(self, x, y):
-        # print("Monster Created")
         super().__init__(x, y, pygame.image.load(f"{IMG_DIR}monster.png"))
         self.speed = DEFAULT_SPEED
         self.health = 100
@@ -78,7 +77,6 @@ class Herb(Collectible):
 class Bacteria(Collectible):
 
     def __init__(self, x, y):
-        # print("Bacteria created")
         super().__init__(x, y, pygame.image.load(f"{IMG_DIR}bacteria.png"))
         self.reward = 10
 
@@ -88,7 +86,7 @@ class Mysterious(Block):
 
     def reveal(self, player):
         # Create a creature object on the fly after user touched this block
-        object_type = random.choice(ITEMS[0:-1]) # excluding Mysterious
+        object_type = random.choice(ITEMS[0:-1] + [Monster]) # excluding Mysterious
         new_obj = object_type(self.rect.x/TILE_SIZE, self.rect.y/TILE_SIZE)
         # replace old sprite with new one
         sprite_group.add(new_obj)

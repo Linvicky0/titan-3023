@@ -76,7 +76,7 @@ class Game:
         self.tiles = [[0] * num_tiles] * num_tiles
         print(len(sprite_group)) # 1 player = 1 sprite
         self.map = Map(self.player, self)
-        print(len(sprite_group)) # 16*16 = 256 sprites
+        print(len(sprite_group)) # 16 * 16 = 256 sprites
         self.running = True
         
     
@@ -114,7 +114,6 @@ class Game:
         
     def render(self):
         if (not GAME_END):
-            # screen.fill(BLACK)
             self.map.draw(screen)
             self.player.life_bar.draw(screen)
             pygame.display.flip()
