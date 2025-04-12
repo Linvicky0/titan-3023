@@ -106,7 +106,6 @@ class Player(Block):
     def __init__(self, x, y):
         super().__init__(x, y, pygame.image.load(f"{IMG_DIR}person.png"))
         self.speed = DEFAULT_SPEED
-        self.health = 100
         self.inventory_items = {} # map object type to their slot and count
         self.inventory_slots = [0] * int(len(ITEMS)/2) # 0 means slot is unused
         self.life_bar = LifeBar(max_life=100, x=10, y=10, width=200, height=20)
