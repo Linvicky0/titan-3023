@@ -10,7 +10,6 @@ import time  # Add this import for timing
 from rain import RainPatch  # Import the RainPatch class
 
 
-
 GAME_END = None
 
 pygame.init()
@@ -248,6 +247,7 @@ class Game:
             self.create_rain_patches()
             self.last_rain_time = current_time
             self.rain_interval = random.randint(15, 30)  # Set next rain interval
+    
     
     def create_rain_patches(self):
         # Create 1-2 rain patches at random locations (reduced from 2-4)
