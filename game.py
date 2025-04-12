@@ -43,8 +43,8 @@ def check_collision(creature, dx, dy):
                 block.life_bar.update(1)
 
         elif isinstance(creature, Player) and isinstance(block, Monster):
-            creature.life_bar.update(1)
-                
+                creature.life_bar.update(1)  
+
         elif (isinstance(block, Collectible) and isinstance(creature, Player)): # object is a collectible
             block.collect_item(creature)
     
@@ -141,13 +141,19 @@ class Game:
             dy = -self.player.speed
         if keys[pygame.K_DOWN] or keys[pygame.K_s]:
             dy = self.player.speed
-            
+        
+        # If not moving, reset animation
+        if dx == 0 and dy == 0:
+            self.player.moving = False
+            self.player.current_frame = 0
+            self.player.update_sprite()
+        
         check_collision(self.player, dx, dy)
     
     def update_monsters(self):
         for monster in monster_group:
             check_collision(monster, monster.rect.x + DEFAULT_SPEED, monster.rect.y + DEFAULT_SPEED)        
-    
+
     def update_rain(self):
         # Update existing rain patches
         rain_group.update()
@@ -158,7 +164,7 @@ class Game:
             self.create_rain_patches()
             self.last_rain_time = current_time
             self.rain_interval = random.randint(15, 30)  # Set next rain interval
-    
+
     def create_rain_patches(self):
         # Create 1-2 rain patches at random locations (reduced from 2-4)
         num_patches = random.randint(1, 2)
