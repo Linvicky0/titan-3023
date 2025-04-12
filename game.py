@@ -9,7 +9,6 @@ from rain import RainPatch  # Import the RainPatch class
 from text import draw_text, text_font # to print text to the screen
 
 
-
 GAME_END = None
 
 pygame.init()
@@ -201,6 +200,7 @@ class Game:
             self.create_rain_patches()
             self.last_rain_time = current_time
             self.rain_interval = random.randint(15, 30)  # Set next rain interval
+    
     
     def create_rain_patches(self):
         # Create 1-2 rain patches at random locations (reduced from 2-4)

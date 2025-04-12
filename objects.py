@@ -130,45 +130,52 @@ class Player(Block):
     
 
     def load_sprites(self):
-         # Path to the sprite sheet
-         sprite_path = os.path.join(IMG_DIR, 'space_man.png')
-         
-         # Create sprite sheet object
-         sprite_sheet = SpriteSheet(sprite_path)
-         
-         # Calculate exact dimensions
-         sprite_width = 1700 // 5  # = 340
-         sprite_height = 1500 // 3  # ≈ 500
-         
-         # Load animations for each direction
-         self.sprites = {
-             'down': sprite_sheet.load_strip((0, 0, sprite_width, sprite_height), 5, None),
-             'up': sprite_sheet.load_strip((0, sprite_height, sprite_width, sprite_height), 5, None),
-             'left': sprite_sheet.load_strip((0, sprite_height*2, sprite_width, sprite_height), 5, None)
-         }
-         
-         # For right-facing animations, flip the left-facing sprites
-         self.sprites['right'] = []
-         for img in self.sprites['left']:
-             self.sprites['right'].append(pygame.transform.flip(img, True, False))
- 
-     
-    def update_sprite(self):
-         if self.sprites:
-             # Get the current animation frame
-             try:
-                 self.image = self.sprites[self.direction][self.current_frame]
-                 # Scale the image if needed
-                 self.image = pygame.transform.scale(self.image, (TILE_SIZE, TILE_SIZE))
-             except (KeyError, IndexError):
-                 # Fallback if sprite loading fails
-                 self.image = pygame.Surface((TILE_SIZE, TILE_SIZE))
-                 self.image.fill(BLUE)
-         else:
-             # Fallback to original colored rectangle
-             self.image = pygame.Surface((TILE_SIZE, TILE_SIZE))
-             self.image.fill(BLUE)
+        # Path to the sprite sheet
+        sprite_path_up = os.path.join(IMG_DIR, 'space_man_up.png')
+        sprite_path_down = os.path.join(IMG_DIR, 'space_man_down.png')
+        sprite_path_side = os.path.join(IMG_DIR, 'space_man_side.png')
         
+        # Create sprite sheet object
+        sprite_sheet_up = SpriteSheet(sprite_path_up)
+        sprite_sheet_down = SpriteSheet(sprite_path_down)
+        sprite_sheet_side = SpriteSheet(sprite_path_side)
+        
+        # Calculate exact dimensions
+        sprite_width = 1700 // 5  # = 340 
+        sprite_height = 300 # = 300 
+        
+        # Load animations for each direction
+        self.sprites = {
+            'down': sprite_sheet_down.load_strip((0, 0, sprite_width, sprite_height), 5, None),
+            'up':   sprite_sheet_up.load_strip((0, 0, sprite_width, sprite_height),   5, None),
+            'left': sprite_sheet_side.load_strip((0, 0, sprite_width, sprite_height), 5, None)
+        }
+ 
+        # For right-facing animations, flip the left-facing sprites
+        self.sprites['right'] = []
+        for img in self.sprites['left']:
+            self.sprites['right'].append(pygame.transform.flip(img, True, False))
+
+        for direction in self.sprites:
+            for image in direction:
+                picture2 = pygame.Surface((100,100)) 
+
+    
+    def update_sprite(self):
+        if self.sprites:
+            # Get the current animation frame
+            try:
+                self.image = self.sprites[self.direction][self.current_frame]
+                # Scale the image if needed
+                self.image = pygame.transform.scale(self.image, (TILE_SIZE-7, TILE_SIZE-7))
+            except (KeyError, IndexError):
+                # Fallback if sprite loading fails
+                self.image = pygame.Surface((TILE_SIZE, TILE_SIZE))
+                self.image.fill(BLUE)
+        else:
+            # Fallback to original colored rectangle
+            self.image = pygame.Surface((TILE_SIZE, TILE_SIZE))
+            self.image.fill(BLUE)
     
     def move(self, dx, dy):
          # Update direction based on movement
