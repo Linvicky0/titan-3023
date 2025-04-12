@@ -1,7 +1,0 @@
-<script>start("/Users/qingshen/Downloads/titan-3023-main/titan-3023/");</script>
-<script>onHasParentDirectory();</script>
-<script>addRow(".git",".git",1,384,"384 B",1744423158,"4/11/25, 9:59:18 PM");</script>
-<script>addRow("background.jpeg","background.jpeg",0,379751,"371 kB",1744422764,"4/11/25, 9:52:44 PM");</script>
-<script>addRow("game_basic.py","game_basic.py",0,5276,"5.2 kB",1744422764,"4/11/25, 9:52:44 PM");</script>
-<script>addRow("life_bar.py","life_bar.py",0,0,"0 B",1744422865,"4/11/25, 9:54:25 PM");</script>
-<script>addRow("README.md","README.md",0,120,"120 B",1744422764,"4/11/25, 9:52:44 PM");</script>
