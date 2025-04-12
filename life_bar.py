@@ -19,10 +19,6 @@ class LifeBar:
         self.width = width
         self.height = height
 
-    def update(self, new_life):
-        """Update the current life."""
-        self.current_life = max(0, min(new_life, self.max_life))
-
     def draw(self, surface):
         """Draw the life bar on the screen."""
         # Draw background (gray)
@@ -36,11 +32,12 @@ class LifeBar:
         # Optional: border
         pygame.draw.rect(surface, BLACK, (self.x, self.y, self.width, self.height), 2)
 
-    def take_damage(self, amount):
-        self.current_life = max(0, self.current_life - amount)
+    def update(self, amount):
+        if (amount < 0):
+            self.current_life = max(0, self.current_life - amount)
+        else:
+            self.current_life = min(self.max_life, self.current_life - amount)
 
-    def heal(self, amount):
-        self.current_life = min(self.max_life, self.current_life + amount)
-    
+   
     def die(self):
         return self.current_life == 0

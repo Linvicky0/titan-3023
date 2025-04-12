@@ -95,7 +95,7 @@ class Mysterious(Block):
         sprite_group.remove(self)
 
         if (isinstance(object_type, Monster)):
-            player.health = max(0, player.health - 5)
+            player.life_bar.update(5)
 
         elif (isinstance(object_type, Collectible)): # put it to backpack
             new_obj.collect_item(player)
