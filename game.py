@@ -104,7 +104,7 @@ class Game:
                 # Create text surface first
                 font = pygame.font.SysFont(None, 32)
                 count_text = f"{player.inventory_items[slot['type']]['count']}"
-                text_surface = font.render(count_text, True, RED)
+                text_surface = font.render(count_text, True, WHITE)
                 
                 # Calculate text position relative to tile_surface
                 text_x = (slot_size - text_surface.get_width()) // 2
@@ -189,7 +189,7 @@ class Game:
             self.rain_interval = random.randint(15, 30)  # Set next rain interval
     
     def create_rain_patches(self):
-        # Create 1-2 rain patches at random locations
+        # Create 1-2 rain patches at random locations (reduced from 2-4)
         num_patches = random.randint(1, 2)
         attempts = 0
         patches_created = 0
@@ -198,12 +198,12 @@ class Game:
             attempts += 1
             
             # Generate random position
-            x = random.randint(0, SCREEN_WIDTH - TILE_SIZE*5)  # Larger area
-            y = random.randint(0, SCREEN_HEIGHT - TILE_SIZE*5)  # Larger area
+            x = random.randint(0, SCREEN_WIDTH - TILE_SIZE*3)
+            y = random.randint(0, SCREEN_HEIGHT - TILE_SIZE*3)
             
-            # Create larger patches (5x5 tiles)
-            patch_width = TILE_SIZE * (4 + random.randint(1, 3))  # 4-6 tiles wide
-            patch_height = TILE_SIZE * (4 + random.randint(1, 3))  # 4-6 tiles high
+            # Larger patches (3x3 tiles instead of 2x2)
+            patch_width = TILE_SIZE * 3
+            patch_height = TILE_SIZE * 3
             
             # Create a temporary rect to check for overlaps
             temp_rect = pygame.Rect(x, y, patch_width, patch_height)
@@ -213,7 +213,7 @@ class Game:
                 # No overlap, create the rain patch
                 rain_patch = RainPatch(x, y, patch_width, patch_height)
                 rain_group.add(rain_patch)
-                patches_created += 1
+                patches_created += 1       
 
 
     def render(self):

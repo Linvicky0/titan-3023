@@ -7,9 +7,8 @@ class RainDrop:
         self.x = x
         self.y = y
         self.speed = speed
-        # Increase the length and thickness of raindrops
-        self.length = random.randint(10, 25)  # Increased from 5-15 to 10-25
-        self.thickness = random.randint(2, 3)  # Increased from 1-2 to 2-3
+        self.length = random.randint(5, 15)  # Length of raindrop
+        self.thickness = random.randint(1, 3)  # Thickness of raindrop
 
 class RainPatch(pygame.sprite.Sprite):
     def __init__(self, x, y, width, height):
@@ -27,8 +26,8 @@ class RainPatch(pygame.sprite.Sprite):
         # Initialize with completely transparent surface
         self.image.fill((0, 0, 0, 0))
         
-        # Create a more organic shape by adding some randomness to the corners
-        self.shape_points = self._generate_random_shape()
+        # Draw an irregular shape for the rain patch
+        self.draw_irregular_shape()
         
         self.rect = self.image.get_rect()
         self.rect.x = x
@@ -41,20 +40,19 @@ class RainPatch(pygame.sprite.Sprite):
         # Slightly fewer drops but larger in size
         self.create_raindrops(int(60 * (self.width * self.height) / (width * height)))
     
-    def _generate_random_shape(self):
-        """Generate points for a random polygon shape that fits within the surface"""
-        # Start with basic rectangle corners
-        points = [
-            (0, 0),
-            (self.width, 0),
-            (self.width, self.height),
-            (0, self.height)
-        ]
+    def draw_irregular_shape(self):
+        """Draw an irregular shape for the rain patch base - nearly transparent"""
+        # Create a barely visible base shape
+        base_color = (170, 255, 0, 10)  # Acid green with very high transparency (only 10/255 alpha)
         
-        # Add some random variation to each point
-        variation = min(self.width, self.height) // 5
-        return points
-        
+        # Draw multiple overlapping circles to create an irregular shape
+        num_circles = random.randint(5, 10)
+        for _ in range(num_circles):
+            center_x = random.randint(0, self.width)
+            center_y = random.randint(0, self.height)
+            radius = random.randint(self.width//3, self.width//2)
+            pygame.draw.circle(self.image, base_color, (center_x, center_y), radius)
+    
     def create_raindrops(self, count):
         for _ in range(count):
             # Distribute drops across the entire area
@@ -72,6 +70,9 @@ class RainPatch(pygame.sprite.Sprite):
         
         # Clear the image completely (fully transparent)
         self.image.fill((0, 0, 0, 0))
+        
+        # Redraw the irregular base shape
+        self.draw_irregular_shape()
         
         # Update and draw raindrops
         for drop in self.raindrops:
