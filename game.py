@@ -37,22 +37,20 @@ def check_collision(creature, dx, dy):
                 block.life_bar.update(1)
 
         elif isinstance(creature, Player) and isinstance(block, Monster):
-<<<<<<< HEAD
-                creature.life_bar.update(1)  
-
-=======
-                creature.life_bar.update(1)
+            creature.life_bar.update(1)
                 
->>>>>>> feature/add_rain
         elif (isinstance(block, Collectible) and isinstance(creature, Player)): # object is a collectible
             block.collect_item(creature)
     
     # Check if player is in rain
     if isinstance(creature, Player):
         rain_hits = pygame.sprite.spritecollide(creature, rain_group, False)
+        # player slows down when in rain, resumes normal speed otherwise 
         if rain_hits:
             creature.life_bar.update(0.1)
-            creature.speed = 2
+            creature.speed = 2 
+        else:
+            creature.speed = 3
 
 
 class Map:
@@ -117,6 +115,12 @@ class Game:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
+        
+        # Game Over event 
+        if self.player.life_bar.current_life == 0:
+            show_Message(window, "You lose.")
+            self.running = False 
+        
                 
         # Handle player movement with keys
         keys = pygame.key.get_pressed()
@@ -135,15 +139,11 @@ class Game:
     
     def update_monsters(self):
         for monster in monster_group:
-<<<<<<< HEAD
-            check_collision(monster, DEFAULT_SPEED, 0)        
-=======
             check_collision(monster, monster.rect.x + DEFAULT_SPEED, monster.rect.y + DEFAULT_SPEED)        
     
     def update_rain(self):
         # Update existing rain patches
         rain_group.update()
->>>>>>> feature/add_rain
         
         # Check if it's time to create new rain
         current_time = time.time()
