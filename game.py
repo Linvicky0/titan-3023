@@ -78,7 +78,9 @@ class Game:
         self.map = Map(self.player, self)
         print(len(sprite_group)) # 16*16 = 256 sprites
         self.running = True
-        
+        self.monsters = pygame.sprite.Group()
+        self.monsters.add(Monster(5, 5))  # Place monster at (5,5)
+        sprite_group.add(*self.monsters) 
     
     def assign_tile(self, row, col):
         if row == 0 or col == 0 or col == len(self.tiles) or row == len(self.tiles):
@@ -110,6 +112,10 @@ class Game:
         self.map.check_collision(self.player, dx, dy)
     
     def update(self):
+        for monster in self.monsters:
+            monster.update(self.tiles)
+        if pygame.sprite.spritecollideany(self.player, self.monsters):
+            self.player.life_bar.take_damage(1)
         pass
         
     def render(self):
