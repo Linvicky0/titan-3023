@@ -26,8 +26,8 @@ def check_collision(creature, dx, dy):
         if (isinstance(block, Mysterious)):
             block.reveal(creature)
         
-        # elif (isinstance(block, Block) and block != creature):
-            # creature.move(-1 * dx, -1 * dy) # undo the move if this is a block collision
+        elif (isinstance(block, Block) and block != creature):
+            creature.move(-1 * dx, -1 * dy) # undo the move if this is a block collision
         elif isinstance(block, Player) and isinstance(creature, Monster):
                 block.life_bar.update(1)
 
