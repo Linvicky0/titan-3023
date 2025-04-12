@@ -4,6 +4,8 @@ import sys
 from game import GAME_END
 import random
 from life_bar import LifeBar
+import os
+from sprites import SpriteSheet
 
 
 # END GAME WHEN TIMER UP OR INVENTORY FULL
@@ -110,14 +112,94 @@ class Mysterious(Block):
 class Player(Block):
 
     def __init__(self, x, y):
-        super().__init__(x, y, pygame.image.load(f"{IMG_DIR}person.png"))
+        super().__init__(x, y)
         self.speed = DEFAULT_SPEED
-        self.inventory_items = {} # map object type to their slot and count
-        self.inventory_slots = [0] * int(len(ITEMS)/2) # 0 means slot is unused
         self.life_bar = LifeBar(max_life=100, x=10, y=10, width=200, height=20)
         
-   
-            
+        # Use only the original inventory system
+        self.inventory_items = {}  # map object type to their slot and count
+        self.inventory_slots = [0] * int(len(ITEMS)/2)  # 0 means slot is unused
+        
+        # Load player sprites
+        self.load_sprites()
+        
+        # Animation variables
+        self.current_frame = 0
+        self.animation_timer = 0
+        self.animation_speed = 100  # milliseconds per frame
+        self.direction = 'down'  # default direction
+        self.moving = False
+        
+        # Update the image with the first sprite
+        self.update_sprite()
+    
+    def load_sprites(self):
+        # Path to the sprite sheet
+        sprite_path = os.path.join(IMG_DIR, 'space man.png')
+        
+        # Create sprite sheet object
+        sprite_sheet = SpriteSheet(sprite_path)
+        
+        # Calculate exact dimensions
+        sprite_width = 1700 // 5  # = 340
+        sprite_height = 1500 // 3  # ≈ 500
+        
+        # Load animations for each direction
+        self.sprites = {
+            'down': sprite_sheet.load_strip((0, 0, sprite_width, sprite_height), 5, None),
+            'up': sprite_sheet.load_strip((0, sprite_height, sprite_width, sprite_height), 5, None),
+            'left': sprite_sheet.load_strip((0, sprite_height*2, sprite_width, sprite_height), 5, None)
+        }
+        
+        # For right-facing animations, flip the left-facing sprites
+        self.sprites['right'] = []
+        for img in self.sprites['left']:
+            self.sprites['right'].append(pygame.transform.flip(img, True, False))
+
+    
+    def update_sprite(self):
+        if self.sprites:
+            # Get the current animation frame
+            try:
+                self.image = self.sprites[self.direction][self.current_frame]
+                # Scale the image if needed
+                self.image = pygame.transform.scale(self.image, (TILE_SIZE, TILE_SIZE))
+            except (KeyError, IndexError):
+                # Fallback if sprite loading fails
+                self.image = pygame.Surface((TILE_SIZE, TILE_SIZE))
+                self.image.fill(BLUE)
+        else:
+            # Fallback to original colored rectangle
+            self.image = pygame.Surface((TILE_SIZE, TILE_SIZE))
+            self.image.fill(BLUE)
+    
+    def move(self, dx, dy):
+        # Update direction based on movement
+        if dx > 0:
+            self.direction = 'right'
+        elif dx < 0:
+            self.direction = 'left'
+        elif dy > 0:
+            self.direction = 'down'
+        elif dy < 0:
+            self.direction = 'up'
+        
+        # Set moving flag
+        self.moving = dx != 0 or dy != 0
+        
+        # Update animation
+        current_time = pygame.time.get_ticks()
+        if self.moving and current_time - self.animation_timer > self.animation_speed:
+            self.animation_timer = current_time
+            self.current_frame = (self.current_frame + 1) % len(self.sprites[self.direction])
+            self.update_sprite()
+        
+        # Call the original move method
+        super().move(dx, dy)
+
+    # Keep this method for compatibility with game.py
+    def inventory_slots(self):
+        return self.inventory_items
 
 ITEMS = [BaseTile, Block, Herb, Bacteria, Mysterious]
 
