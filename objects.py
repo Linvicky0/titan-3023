@@ -15,14 +15,26 @@ import os
 sprite_group = pygame.sprite.Group()
 monster_group = pygame.sprite.Group()
 
+
 class BaseTile(pygame.sprite.Sprite):
 
 
     def __init__(self, x, y, img = None):
         super().__init__()
-        self.rect = pygame.Rect(x*TILE_SIZE, y*TILE_SIZE, TILE_SIZE, TILE_SIZE)
-        self.image = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
-        sprite_group.add(self)
+        if not isinstance(self, Player):
+            self.image = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
+            self.rect = self.image.get_rect(topleft=(x * TILE_SIZE, y * TILE_SIZE))
+        else:
+            size_ratio = 1/2
+            player_width = TILE_SIZE * size_ratio
+            player_height = TILE_SIZE * size_ratio
+            self.image = pygame.Surface((player_width, player_height), pygame.SRCALPHA)
+            #Center the player within the tile
+            tile_center_x = x * TILE_SIZE + TILE_SIZE / 2
+            tile_center_y = y * TILE_SIZE + TILE_SIZE / 2
+            self.rect = self.image.get_rect(center=(tile_center_x, tile_center_y))
+          
+        sprite_group.add(self) 
     
     def move(self, dx, dy):
         # Move the player while checking for collisions with map boundaries
@@ -58,6 +70,7 @@ class Collectible(BaseTile):
         object_type = type(self)
         if (object_type in player.inventory_items):
                 player.inventory_items[object_type]["count"] += 1
+
         else:
             slot_indices = [i for i in range(len(player.inventory_slots))]
             free_slots = list(filter(lambda i: player.inventory_slots[i] == 0, slot_indices))
@@ -66,30 +79,69 @@ class Collectible(BaseTile):
             # check if inventory is full
             if len(free_slots) == 1: # this slot is now used
                 GAME_END = "finished"
+        
         sprite_group.remove(self)
        
 
 class Monster(Block):
     
     def __init__(self, x, y):
+
         super().__init__(x, y, pygame.image.load(f"{IMG_DIR}monster.png"))
         self.speed = DEFAULT_SPEED
         self.health = 100
         monster_group.add(self)
-        
+
+
+   
 
 class Herb(Collectible):
 
     def __init__(self, x, y):
-        super().__init__(x, y, pygame.image.load(f"{IMG_DIR}herb.png"))     
-        self.reward = 5
+        image = pygame.image.load(os.path.join(IMG_DIR, "herb.png")).convert_alpha()
+        super().__init__(x, y,image)
+        self.name = "herb"
+        self.description_lines = [
+            "Habitat: Grows along methane lake edges, thrives in darkness",
+            "Appearance: Bioluminescent tendrils with soft cyan glow",
+            "Effect: Restores visibility during Titan's long night",
+            "Use: Craft light patches to reveal map areas or attract creatures"
+        ]
+
+
+
+class Glowvine(Collectible):
+    def __init__(self, x, y):
+        image = pygame.image.load(os.path.join(IMG_DIR, "herb", "Glowvine.png")).convert_alpha()
+        super().__init__(x, y,image)
+        self.name = "Glowvine"
+        self.description_lines = [
+            "Habitat: Grows along methane lake edges, thrives in darkness",
+            "Appearance: Bioluminescent tendrils with soft cyan glow",
+            "Effect: Restores visibility during Titan's long night",
+            "Use: Craft light patches to reveal map areas or attract creatures"
+        ]
+
+   
 
 
 class Bacteria(Collectible):
 
     def __init__(self, x, y):
-        super().__init__(x, y, pygame.image.load(f"{IMG_DIR}bacteria.png"))
+
+        # print("Bacteria created")
+        image = pygame.image.load(os.path.join(IMG_DIR, "bacteria.png")).convert_alpha()
+        super().__init__(x, y,image)
+        self.name = "bactria"
+        self.description_lines = [
+            "Habitat: Grows along methane lake edges, thrives in darkness",
+            "Appearance: Bioluminescent tendrils with soft cyan glow",
+            "Effect: Restores visibility during Titan's long night",
+            "Use: Craft light patches to reveal map areas or attract creatures"
+        ]
         self.reward = 10
+
+   
         
 
 class Mysterious(Block):
@@ -107,6 +159,7 @@ class Mysterious(Block):
 
         elif (isinstance(object_type, Collectible)): # put it to backpack
             new_obj.collect_item(player)
+
                     
 
 class Player(Block):
@@ -124,6 +177,11 @@ class Player(Block):
         self.animation_speed = 100  # milliseconds per frame
         self.direction = 'down'  # default direction
         self.moving = False
+
+        self.popup_text = None
+        self.popup_timer = 0
+        self.popup_duration = 5000  # milliseconds = 3 seconds
+
         
         # Update the image with the first sprite
         self.update_sprite()
@@ -194,8 +252,11 @@ class Player(Block):
          # Call the original move method
          super().move(dx, dy)
  
+    
 
-ITEMS = [BaseTile, Block, Herb, Bacteria, Mysterious]
+
+ITEMS = [BaseTile, Block, Herb, Glowvine, Bacteria, Mysterious]
+
 
         
  

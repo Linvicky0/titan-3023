@@ -1,18 +1,26 @@
 import pygame
+import os  
 from pygame.locals import *
 from objects import *
+from start_page import InfoPage
+from constants import *
 import sys
-import os  
 import random
 import time  # Add this import for timing
 from rain import RainPatch  # Import the RainPatch class
-from text import draw_text, text_font # to print text to the screen
 
 
 
 GAME_END = None
 
 pygame.init()
+
+
+text_font = pygame.font.SysFont("Arial", 60)
+
+def draw_text(text, font, text_color, x, y):
+    img = font.render(text, True, text_color)
+    screen.blit(img, (x, y))
 
 
 # Create the game window
@@ -22,6 +30,32 @@ clock = pygame.time.Clock()
 
 # Create a group for rain patches
 rain_group = pygame.sprite.Group()
+
+
+
+def check_monster_collision(monster, dx, dy):
+    # Move the monster
+    monster.move(dx, dy)
+
+    # Check for collisions with the sprite group
+    collided_sprites = pygame.sprite.spritecollide(monster, sprite_group, False)
+
+    # Define the types to check for
+    collision_types = (Block, Herb, Bacteria)
+
+    # Check if any collided sprite is an instance of the specified types
+    if any(isinstance(sprite, collision_types) for sprite in collided_sprites):
+        # Undo the movement
+        monster.move(-dx, -dy)
+
+        # Choose a new random direction
+        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+        new_direction = random.choice(directions)
+        new_dx = new_direction[0] * DEFAULT_SPEED
+        new_dy = new_direction[1] * DEFAULT_SPEED
+
+        # Attempt to move in the new direction
+        monster.move(new_dx, new_dy)
 
 def check_collision(creature, dx, dy):
 
@@ -70,7 +104,7 @@ class Map:
         # Load background image
         try:
             # Scale the background to fit the map size
-            self.background = pygame.image.load(f'{IMG_DIR}background.jpeg').convert()
+            self.background = pygame.image.load(f'{BACKGROUND_DIR}background.jpeg').convert()
             self.background = pygame.transform.scale(self.background, (SCREEN_WIDTH, SCREEN_HEIGHT))
            
         except pygame.error as e:
@@ -93,6 +127,8 @@ class Game:
         self.running = True
         self.last_rain_time = time.time()
         self.rain_interval = random.randint(15, 30)  # Random interval between rain events
+        self.show_info_page = False
+        self.info_page = InfoPage()
 
     def draw_inventory(self, player):
        # generate boxes for inventory
@@ -104,7 +140,7 @@ class Game:
         for box in range(num_slots):
                 
             tile_surface = pygame.Surface((slot_size, slot_size), pygame.SRCALPHA)
-            tile_surface.fill((*BLUE, 50))
+            tile_surface.fill((*BLUE, 100))
             tile_pos = (cur_box_x, y_pos)
 
 
@@ -117,11 +153,11 @@ class Game:
                   # Create text surface first
                 font = pygame.font.SysFont(None, 32)
                 count_text = f"{player.inventory_items[slot['type']]['count']}"
-                text_surface = font.render(count_text, True, RED)
+                text_surface = font.render(count_text, True, WHITE)
                 
                 # Calculate text position relative to tile_surface
-                text_x = (slot_size - text_surface.get_width()) // 2
-                text_y = (slot_size - text_surface.get_height()) // 2
+                text_x = (slot_size - text_surface.get_width()) - 4
+                text_y = (slot_size - text_surface.get_height()) - 4
                 
                 # Blit text directly onto tile_surface at calculated position
                 tile_surface.blit(text_surface, (text_x, text_y))
@@ -140,6 +176,7 @@ class Game:
         sprite_group.draw(screen)
         rain_group.draw(screen)
 
+
     
     def assign_tile(self, row, col):
         if row == 0 or col == 0 or col == len(self.tiles) or row == len(self.tiles):
@@ -154,6 +191,16 @@ class Game:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_i:
+                    self.show_info_page = not self.show_info_page
+                elif event.key == pygame.K_ESCAPE and self.show_info_page:
+                    self.show_info_page = False
+                elif self.show_info_page:
+                    if event.key == pygame.K_UP:
+                        self.info_page.scroll(-30)
+                    elif event.key == pygame.K_DOWN:
+                        self.info_page.scroll(30)
         
         # Game Over event: prints message to screen and exits 
         if self.player.life_bar.current_life <= 0:
@@ -162,7 +209,6 @@ class Game:
             pygame.display.update()
             time.sleep(5)
             self.running = False 
-        
                 
         # Handle player movement with keys
         keys = pygame.key.get_pressed()
@@ -184,16 +230,18 @@ class Game:
         else:
             check_collision(self.player, dx, dy)
     
-    def update_monsters(self):
+    def update_monsters(self):        
+        D = [(-1, 0), (0, 1), (0, -1), (1, 0)]
         for monster in monster_group:
             x = random.choice([-1*(DEFAULT_SPEED*2), DEFAULT_SPEED])
             y = random.choice([-1*(DEFAULT_SPEED*2), DEFAULT_SPEED])
-            check_collision(monster, x, y) 
+            check_monster_collision(monster, x, y) 
 
 
     def update_rain(self):
         # Update existing rain patches
         rain_group.update()
+
         
         # Check if it's time to create new rain
         current_time = time.time()
@@ -231,7 +279,12 @@ class Game:
 
 
     def render(self):
+        if self.show_info_page:
+            self.info_page.draw(screen)
+            pygame.display.flip()
+            return
         if (not GAME_END):
+
             self.draw(screen)
             self.player.life_bar.draw(screen)
             pygame.display.flip()
@@ -254,6 +307,7 @@ class Game:
 
         
     def run(self):
+        self.show_start_screen()
         while self.running:
             self.process_events()
             self.update_monsters()
@@ -261,6 +315,45 @@ class Game:
             self.render()
             clock.tick(60)  # 60 FPS
     
+
+    def show_start_screen(self):
+        background = pygame.image.load(f"{BACKGROUND_DIR}start_background.png").convert()
+        background = pygame.transform.scale(background, (SCREEN_WIDTH, SCREEN_HEIGHT))
+
+        font = pygame.font.SysFont(None, 36)
+        title_font = pygame.font.SysFont(None, 64)
+
+        while True:
+            screen.blit(background, (0, 0))
+
+            # Game title
+            title_text = title_font.render("🌌 Titan Exploration 🌌", True, (255, 255, 255))
+            screen.blit(title_text, (SCREEN_WIDTH//2 - title_text.get_width()//2, 50))
+
+            # Instructions
+            start_text = font.render("Press SPACE to start", True, (255, 255, 255))
+            info_text = font.render("Press I for Information • Press Q to Quit", True, (200, 200, 200))
+
+            screen.blit(start_text, (SCREEN_WIDTH//2 - start_text.get_width()//2, SCREEN_HEIGHT - 120))
+            screen.blit(info_text, (SCREEN_WIDTH//2 - info_text.get_width()//2, SCREEN_HEIGHT - 80))
+
+            pygame.display.flip()
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        return  # exit start screen and begin game
+                    elif event.key == pygame.K_q:
+                        pygame.quit()
+                        sys.exit()
+                    elif event.key == pygame.K_i:
+                        self.show_info_page = True
+                        return  # open game, info page will trigger right away
+
 
 # Main function
 def main():
