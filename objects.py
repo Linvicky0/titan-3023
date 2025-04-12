@@ -7,6 +7,7 @@ from life_bar import LifeBar
 from sprites import SpriteSheet
 import os
 
+
 # END GAME WHEN TIMER UP OR INVENTORY FULL
 
 # All objects are one of these 3 categories: blank tile, collectible, or a block (can't move through it)
@@ -39,7 +40,8 @@ class Block(BaseTile):
         if not img:
             self.image.fill(color)
         else:
-            self.image = pygame.transform.scale(img, (TILE_SIZE - 5, TILE_SIZE - 5))
+
+            self.image = pygame.transform.scale(img, (TILE_SIZE-7, TILE_SIZE-7))
             self.rect = self.image.get_rect(topleft=(x * TILE_SIZE, y * TILE_SIZE))
 
 
@@ -113,10 +115,9 @@ class Player(Block):
     def __init__(self, x, y):
         super().__init__(x, y)
         self.speed = DEFAULT_SPEED
-        self.inventory_items = {} # map object type to their slot and count
-        self.inventory_slots = [0] * int(len(ITEMS)/2) # 0 means slot is unused
         self.life_bar = LifeBar(max_life=100, x=10, y=10, width=200, height=20)
-
+        self.inventory_items = {} # map object type to their slot and count
+        self.inventory_slots = [0] * int(len(ITEMS)/2) # 0 means slot is unused        
         self.load_sprites()
          # Animation variables
         self.current_frame = 0
@@ -193,6 +194,7 @@ class Player(Block):
          
          # Call the original move method
          super().move(dx, dy)
+ 
 
 ITEMS = [BaseTile, Block, Herb, Bacteria, Mysterious]
 

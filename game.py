@@ -6,6 +6,8 @@ import os
 import random
 import time  # Add this import for timing
 from rain import RainPatch  # Import the RainPatch class
+from text import draw_text, text_font # to print text to the screen
+
 
 
 GAME_END = None
@@ -17,8 +19,9 @@ pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Start Game")
 clock = pygame.time.Clock()
-rain_group = pygame.sprite.Group()
 
+# Create a group for rain patches
+rain_group = pygame.sprite.Group()
 
 def check_collision(creature, dx, dy):
 
@@ -34,6 +37,17 @@ def check_collision(creature, dx, dy):
             creature.move(-1 * dx, -1 * dy) # undo the move if this is a block collision
         elif (isinstance(block, Collectible) and isinstance(creature, Player)): # object is a collectible
             block.collect_item(creature)
+    
+    # Check if player is in rain
+    if isinstance(creature, Player):
+        rain_hits = pygame.sprite.spritecollide(creature, rain_group, False)
+        # player slows down when in rain, resumes normal speed otherwise 
+        if rain_hits:
+            creature.life_bar.update(0.1) 
+            creature.speed = 2 
+        else:
+            creature.speed = 3
+
 
         if isinstance(block, Player) and isinstance(creature, Monster):
                 block.life_bar.update(1)
@@ -67,8 +81,6 @@ class Map:
             self.background.fill(GREEN)
         
    
-        
-                
 
 # Game class
 class Game:
@@ -76,9 +88,9 @@ class Game:
         self.player = Player(0, 0)
 
         self.tiles = [[0] * num_tiles] * num_tiles
-        print(len(sprite_group)) # 1 player = 1 sprite
+        # print(len(sprite_group)) # 1 player = 1 sprite
         self.map = Map(self.player, self)
-        print(len(sprite_group)) # 16 * 16 = 256 sprites
+        # print(len(sprite_group)) # 16 * 16 = 256 sprites
         self.running = True
         self.last_rain_time = time.time()
         self.rain_interval = random.randint(15, 30)  # Random interval between rain events
@@ -122,6 +134,7 @@ class Game:
         self.draw_inventory(self.player)
         sprite_group.draw(screen)
         rain_group.draw(screen)
+
     
     def assign_tile(self, row, col):
         if row == 0 or col == 0 or col == len(self.tiles) or row == len(self.tiles):
@@ -136,6 +149,15 @@ class Game:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
+        
+        # Game Over event: prints message to screen and exits 
+        if self.player.life_bar.current_life <= 0:
+            screen.fill((255, 255, 255)) 
+            draw_text("Game over", text_font, (0, 0, 0), 220, 150)
+            pygame.display.update()
+            time.sleep(5)
+            self.running = False 
+        
                 
         # Handle player movement with keys
         keys = pygame.key.get_pressed()
@@ -162,6 +184,7 @@ class Game:
             x = random.choice([-1*(DEFAULT_SPEED*2), DEFAULT_SPEED])
             y = random.choice([-1*(DEFAULT_SPEED*2), DEFAULT_SPEED])
             check_collision(monster, x, y) 
+
 
     def update_rain(self):
         # Update existing rain patches
@@ -200,7 +223,7 @@ class Game:
                 rain_patch = RainPatch(x, y, patch_width, patch_height)
                 rain_group.add(rain_patch)
                 patches_created += 1       
-        
+
 
     def render(self):
         if (not GAME_END):

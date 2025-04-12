@@ -16,7 +16,6 @@ PINK=(255,0,255)
 GREY=(128,128,128)
 GRAY = (169, 169, 169)
 
-
 IMG_DIR = "./img/"
 DEFAULT_SPEED = 3
 
