@@ -28,6 +28,7 @@ def check_collision(creature, dx, dy):
         
         elif (isinstance(block, Block) and block != creature):
             creature.move(-1 * dx, -1 * dy) # undo the move if this is a block collision
+
         elif isinstance(block, Player) and isinstance(creature, Monster):
                 block.life_bar.update(1)
 
@@ -38,8 +39,6 @@ def check_collision(creature, dx, dy):
             block.collect_item(creature)
 
 class Map:
-
-    
 
     def __init__(self, main_player, game):
         # assuming player starts at (0,0) - can't place block there
@@ -113,7 +112,9 @@ class Game:
     
     def update_monsters(self):
         for monster in monster_group:
-            check_collision(monster, DEFAULT_SPEED, 0)        
+            x = random.choice([-1*(DEFAULT_SPEED*2), DEFAULT_SPEED])
+            y = random.choice([-1*(DEFAULT_SPEED*2), DEFAULT_SPEED])
+            check_collision(monster, x, y)        
         
 
     def render(self):
