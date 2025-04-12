@@ -149,8 +149,13 @@ class Game:
             dy = -self.player.speed
         if keys[pygame.K_DOWN] or keys[pygame.K_s]:
             dy = self.player.speed
-            
-        check_collision(self.player, dx, dy)
+
+        if dx == 0 and dy == 0:
+             self.player.moving = False
+             self.player.current_frame = 0
+             self.player.update_sprite()
+        else:
+            check_collision(self.player, dx, dy)
     
     def update_monsters(self):
         for monster in monster_group:
