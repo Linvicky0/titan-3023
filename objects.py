@@ -26,6 +26,7 @@ class BaseTile(pygame.sprite.Sprite):
         # Move the player while checking for collisions with map boundaries
         if 0 <= self.rect.x + dx <= SCREEN_WIDTH - self.rect.width:
             self.rect.x += dx
+           
         if 0 <= self.rect.y + dy <= SCREEN_HEIGHT - self.rect.height:
             self.rect.y += dy
     
