@@ -4,6 +4,8 @@ from objects import *
 import sys
 import os  
 import random
+import time  # Add this import for timing
+from rain import RainPatch  # Import the RainPatch class
 
 
 GAME_END = None
@@ -15,6 +17,9 @@ pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Start Game")
 clock = pygame.time.Clock()
+
+# Create a group for rain patches
+rain_group = pygame.sprite.Group()
 
 def check_collision(creature, dx, dy):
 
@@ -30,13 +35,19 @@ def check_collision(creature, dx, dy):
         elif (isinstance(block, Block) and block != creature):
             creature.move(-1 * dx, -1 * dy) # undo the move if this is a block collision
         elif isinstance(block, Player) and isinstance(creature, Monster):
-                block.life_bar.take_damage(1)
+                block.life_bar.update(1)
 
         elif isinstance(creature, Player) and isinstance(block, Monster):
-                creature.life_bar.take_damage(1)  
+                creature.life_bar.update(1)
                 
         elif (isinstance(block, Collectible) and isinstance(creature, Player)): # object is a collectible
             block.collect_item(creature)
+    
+    # Check if player is in rain
+    if isinstance(creature, Player):
+        rain_hits = pygame.sprite.spritecollide(creature, rain_group, False)
+        if rain_hits:
+            creature.life_bar.update(0.1)
 
 class Map:
 
@@ -70,6 +81,8 @@ class Map:
         surface.blit(self.background, (0, 0))
         # print(len(sprite_group))
         sprite_group.draw(screen)
+        # Draw rain patches
+        rain_group.draw(screen)
                 
 
 # Game class
@@ -81,6 +94,8 @@ class Game:
         self.map = Map(self.player, self)
         print(len(sprite_group)) # 16 * 16 = 256 sprites
         self.running = True
+        self.last_rain_time = time.time()
+        self.rain_interval = random.randint(15, 30)  # Random interval between rain events
         
     
     def assign_tile(self, row, col):
@@ -115,7 +130,44 @@ class Game:
     def update_monsters(self):
         for monster in monster_group:
             check_collision(monster, monster.rect.x + DEFAULT_SPEED, monster.rect.y + DEFAULT_SPEED)        
+    
+    def update_rain(self):
+        # Update existing rain patches
+        rain_group.update()
         
+        # Check if it's time to create new rain
+        current_time = time.time()
+        if current_time - self.last_rain_time > self.rain_interval:
+            self.create_rain_patches()
+            self.last_rain_time = current_time
+            self.rain_interval = random.randint(15, 30)  # Set next rain interval
+    
+    def create_rain_patches(self):
+        # Create 1-2 rain patches at random locations (reduced from 2-4)
+        num_patches = random.randint(1, 2)
+        attempts = 0
+        patches_created = 0
+        
+        while patches_created < num_patches and attempts < 20:  # Limit attempts to prevent infinite loop
+            attempts += 1
+            
+            # Generate random position
+            x = random.randint(0, SCREEN_WIDTH - TILE_SIZE*3)
+            y = random.randint(0, SCREEN_HEIGHT - TILE_SIZE*3)
+            
+            # Larger patches (3x3 tiles instead of 2x2)
+            patch_width = TILE_SIZE * 3
+            patch_height = TILE_SIZE * 3
+            
+            # Create a temporary rect to check for overlaps
+            temp_rect = pygame.Rect(x, y, patch_width, patch_height)
+            
+            # Check if this position would overlap with existing rain patches
+            if not RainPatch.check_overlap(temp_rect, rain_group.sprites()):
+                # No overlap, create the rain patch
+                rain_patch = RainPatch(x, y, patch_width, patch_height)
+                rain_group.add(rain_patch)
+                patches_created += 1
 
     def render(self):
         if (not GAME_END):
@@ -144,6 +196,7 @@ class Game:
         while self.running:
             self.process_events()
             self.update_monsters()
+            self.update_rain()  # Update rain patches
             self.render()
             clock.tick(60)  # 60 FPS
     
