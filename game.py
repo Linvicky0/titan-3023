@@ -2,6 +2,7 @@ import pygame
 import sys
 import os  # For path handling
 from life_bar import LifeBar
+
 # Initialize Pygame
 pygame.init()
 
@@ -17,6 +18,7 @@ WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 BROWN = (139, 69, 19)
+REVEALED_COLOR = (200, 200, 200)  # Color for revealed fake walls
 
 # Create the game window
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -29,7 +31,6 @@ class Player:
         self.rect = pygame.Rect(100, 100, 32, 32)
         self.color = BLUE
         self.speed = PLAYER_SPEED
-      
         
     def move(self, dx, dy):
         # Move the player while checking for collisions with map boundaries
@@ -44,23 +45,24 @@ class Player:
 # Simple map class
 class Map:
     def __init__(self):
-        # Simple grid-based map: 0 = grass, 1 = wall
+        # Simple grid-based map: 0 = grass, 1 = wall, 2 = fake wall (clickable)
         self.grid = [
             [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 1, 1, 0, 1, 0, 1, 2, 1, 1, 0, 0, 0, 0, 0, 0],
+            [0, 1, 1, 0, 1, 0, 1, 2, 1, 1, 0, 0, 0, 0, 0, 0],  # Here, cell (1, 7) is a clickable fake wall
             [0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0],
-            [0, 1, 0, 1, 1, 1, 1, 1, 0, 2, 0, 1, 0, 0, 0, 0],
+            [0, 1, 0, 1, 1, 1, 1, 1, 0, 2, 0, 1, 0, 0, 0, 0],  # Cell (3, 9) is a clickable fake wall
             [0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0],
             [0, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 2, 0, 0],
+            [0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 2, 0, 0],  # Cell (6, 13) is a clickable fake wall
             [0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 0],
+            [0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 0],  # Cell (8, 13) is a clickable fake wall
             [0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2],
+            [0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0, 0],  # Cell (9, 13) is a clickable fake wall
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2],  # Cells (10, 13), (10, 14), (10, 15) are clickable fake walls
         ]
         self.wall_rects = []
         self.clickable_rects = []
+        self.clicked_fake_walls = []  # Keep track of clicked fake walls
         self._create_wall_rects()
         
         # Load background image
@@ -76,69 +78,49 @@ class Map:
             # Create a fallback background surface
             self.background = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
             self.background.fill(GREEN)
-        
-    def _create_wall_rects(self):
-     for y, row in enumerate(self.grid):
-        for x, cell in enumerate(row):
-            rect = pygame.Rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
-            if cell == 1:  # Real walls
-                self.wall_rects.append(rect) 
-            elif cell == 2:  # Fake walls (clickable)
-                self.wall_rects.append(rect)
-                self.clickable_rects.append(rect)
 
-    def remove_fake_wall(self, pos):
+    def _create_wall_rects(self):
         for y, row in enumerate(self.grid):
             for x, cell in enumerate(row):
-                if cell == 2:  # Check if the cell is a fake wall
-                    rect = pygame.Rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
-                    if rect.collidepoint(pos):  # If clicked on a fake wall
-                        self.grid[y][x] = 0  # Clear the fake wall (set to empty space)
-                        self.clickable_rects = [r for r in self.clickable_rects if r != rect]  # Remove from clickable list
-                        break
-                    
+                rect = pygame.Rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+                if cell == 1:  # Real walls
+                    self.wall_rects.append(rect)
+                elif cell == 2:  # Fake walls (clickable)
+                    self.clickable_rects.append(rect)
+
     def draw(self, surface):
-    # Draw the background image first
+        # Draw the background image first
         surface.blit(self.background, (0, 0))
 
-    # Draw real walls
+        # Draw real walls
         for rect in self.wall_rects:
             pygame.draw.rect(surface, BROWN, rect)
             pygame.draw.rect(surface, BLACK, rect, 2)  # Optional border
 
-    # Draw clickable objects (fake walls)
+        # Draw clickable fake walls (clickable areas)
         for rect in self.clickable_rects:
-            pygame.draw.rect(surface, BROWN, rect)  # Make them look like real walls
+            if rect in self.clicked_fake_walls:
+                pygame.draw.rect(surface, REVEALED_COLOR, rect)  # Show as revealed
+            else:
+                pygame.draw.rect(surface, BROWN, rect)  # Default fake wall color
             pygame.draw.rect(surface, BLACK, rect, 2)  # Optional border
-        
-        # # Draw only the walls and grid lines
-        # for y, row in enumerate(self.grid):
-        #     for x, cell in enumerate(row):
-        #         rect = pygame.Rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
-        #         if cell == 1:
-        #             pygame.draw.rect(surface, BROWN, rect)  # wall
-        #         pygame.draw.rect(surface, BLACK, rect, 1)  # grid lines
-    # def _create_clickable_rects(self):
-    #     # Create rectangles for clickable objects (not real walls)
-    #     for y, row in enumerate(self.grid):
-    #         for x, cell in enumerate(row):
-    #             if cell == 2:  # Clickable objects
-    #                 rect = pygame.Rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
-    #                 self.clickable_rects.append(rect)
-                    
-    # def _create_wall_rects(self):
-    #     # Create rectangles for real walls for collision detection
-    #     for y, row in enumerate(self.grid):
-    #         for x, cell in enumerate(row):
-    #             if cell == 1:  # Real walls
-    #                 rect = pygame.Rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
-    #                 self.wall_rects.append(rect)
-                
+
     def check_collision(self, player_rect):
         for wall in self.wall_rects:
             if player_rect.colliderect(wall):
                 return True
+        for rect in self.clickable_rects:
+            # Block movement on fake walls unless clicked
+            if rect.colliderect(player_rect) and rect not in self.clicked_fake_walls:
+                return True
         return False
+
+    def handle_click(self, pos):
+        # Check if the clicked position is a fake wall
+        for rect in self.clickable_rects:
+            if rect.collidepoint(pos) and rect not in self.clicked_fake_walls:
+                self.clicked_fake_walls.append(rect)  # Mark it as clicked
+                break
 
 # Game class
 class Game:
@@ -147,27 +129,15 @@ class Game:
         self.map = Map()
         self.running = True
         self.life_bar = LifeBar(max_life=100, x=10, y=10, width=200, height=20)
-        
-    # def process_events(self):
-    #     for event in pygame.event.get():
-    #         if event.type == pygame.QUIT:
-    #             self.running = False
-    #         if event.type == pygame.MOUSEBUTTONDOWN:
-    #             pos = pygame.mouse.get_pos()
-    #             for rect in self.map.clickable_rects:
-    #                 if rect.collidepoint(pos):
-    #                     self.map.clickable_rects.remove(rect)
-    #                     break  # Only remove one per click
+
     def process_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
-                self.map.remove_fake_wall(pos)  # Remove clicked fake wall and reveal background
+                self.map.handle_click(pos)  # Handle fake wall click
 
-
-                
         # Handle player movement with keys
         keys = pygame.key.get_pressed()
         dx, dy = 0, 0
@@ -188,7 +158,7 @@ class Game:
         
         if not self.map.check_collision(temp_rect):
             self.player.move(dx, dy)
-    
+
     def update(self):
         pass
         
