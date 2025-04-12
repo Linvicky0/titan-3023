@@ -59,15 +59,18 @@ class Block(BaseTile):
 
 class Collectible(BaseTile):
 
+    reward = 0
+
     def __init__(self, x, y, img):
         super().__init__(x, y)
         assert(img) # collectibles should have an image
         self.image = pygame.transform.scale(img, (TILE_SIZE, TILE_SIZE))
         self.rect = self.image.get_rect(topleft=(x * TILE_SIZE, y * TILE_SIZE))
-        self.award = 0
+        
     
     def collect_item(self, player):
         object_type = type(self)
+        player.score += object_type.reward
         if (object_type in player.inventory_items):
                 player.inventory_items[object_type]["count"] += 1
 
@@ -97,35 +100,49 @@ class Monster(Block):
 
 class Herb(Collectible):
 
+    reward = 5
+
     def __init__(self, x, y):
         image = pygame.image.load(os.path.join(IMG_DIR, "herb.png")).convert_alpha()
         super().__init__(x, y,image)
         self.name = "herb"
+
         self.description_lines = [
             "Habitat: Grows along methane lake edges, thrives in darkness",
             "Appearance: Bioluminescent tendrils with soft cyan glow",
             "Effect: Restores visibility during Titan's long night",
-            "Use: Craft light patches to reveal map areas or attract creatures"
+            "Use: Craft light patches to reveal map areas or attract creatures",
+            f"Reward point: {Herb.reward}"
         ]
 
 
 
 class Glowvine(Collectible):
+
+    reward = 15
+
     def __init__(self, x, y):
         image = pygame.image.load(os.path.join(IMG_DIR, "herb", "Glowvine.png")).convert_alpha()
         super().__init__(x, y,image)
         self.name = "Glowvine"
+        
+
         self.description_lines = [
             "Habitat: Grows along methane lake edges, thrives in darkness",
             "Appearance: Bioluminescent tendrils with soft cyan glow",
             "Effect: Restores visibility during Titan's long night",
-            "Use: Craft light patches to reveal map areas or attract creatures"
+            "Use: Craft light patches to reveal map areas or attract creatures",
+            f"Reward point: {Glowvine.reward}"
         ]
+
+
 
    
 
 
 class Bacteria(Collectible):
+
+    reward = 10
 
     def __init__(self, x, y):
 
@@ -137,9 +154,9 @@ class Bacteria(Collectible):
             "Habitat: Grows along methane lake edges, thrives in darkness",
             "Appearance: Bioluminescent tendrils with soft cyan glow",
             "Effect: Restores visibility during Titan's long night",
-            "Use: Craft light patches to reveal map areas or attract creatures"
+            "Use: Craft light patches to reveal map areas or attract creatures",
+            f"Reward point: {Bacteria.reward}"
         ]
-        self.reward = 10
 
    
         
@@ -170,6 +187,7 @@ class Player(Block):
         self.life_bar = LifeBar(max_life=100, x=10, y=10, width=200, height=20)
         self.inventory_items = {} # map object type to their slot and count
         self.inventory_slots = [0] * int(len(ITEMS)/2) # 0 means slot is unused        
+        self.score = 0
         self.load_sprites()
          # Animation variables
         self.current_frame = 0
@@ -251,7 +269,8 @@ class Player(Block):
          
          # Call the original move method
          super().move(dx, dy)
- 
+    
+
     
 
 

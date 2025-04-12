@@ -31,7 +31,7 @@ class LifeBar:
 
         # Optional: border
         pygame.draw.rect(surface, BLACK, (self.x, self.y, self.width, self.height), 2)
-        life_text = f"{self.current_life}%"
+        life_text = f"{int(self.current_life)}%"
         text_surface = self.font.render(life_text, True, BLACK)  # Render text
         text_rect = text_surface.get_rect(center=(self.x + self.width // 2, self.y + self.height // 2))
         surface.blit(text_surface, text_rect) 

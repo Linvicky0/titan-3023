@@ -16,7 +16,7 @@ GAME_END = None
 pygame.init()
 
 
-text_font = pygame.font.SysFont("Arial", 60)
+text_font = pygame.font.SysFont("Arial", 30)
 
 def draw_text(text, font, text_color, x, y):
     img = font.render(text, True, text_color)
@@ -205,9 +205,8 @@ class Game:
         # Game Over event: prints message to screen and exits 
         if self.player.life_bar.current_life <= 0:
             screen.fill((255, 255, 255)) 
-            draw_text("Game over", text_font, (0, 0, 0), 220, 150)
+            draw_text(f"Game over, score: {self.player.score}", text_font, BLACK, SCREEN_WIDTH/3, SCREEN_HEIGHT/2)
             pygame.display.update()
-            time.sleep(5)
             self.running = False 
                 
         # Handle player movement with keys
@@ -293,6 +292,7 @@ class Game:
             screen.fill(BLACK)
             font = pygame.font.SysFont(None, 55)
             text = "Timer Up!\n\n"
+            
             if (GAME_END == "finished"):
                 text = "Congrats on finishing!\n\n"
             
