@@ -69,8 +69,6 @@ class Collectible(BaseTile):
         sprite_group.remove(self)
        
 
-
-
 class Monster(Block):
     
     def __init__(self, x, y):
@@ -86,13 +84,14 @@ class Herb(Collectible):
         super().__init__(x, y, pygame.image.load(f"{IMG_DIR}herb.png"))     
         self.reward = 5
 
+
 class Bacteria(Collectible):
 
     def __init__(self, x, y):
         super().__init__(x, y, pygame.image.load(f"{IMG_DIR}bacteria.png"))
         self.reward = 10
-
         
+
 class Mysterious(Block):
 
     def reveal(self, player):

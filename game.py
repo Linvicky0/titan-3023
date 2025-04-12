@@ -69,11 +69,10 @@ class Map:
         
         # Load background image
         try:
-            self.background = pygame.image.load(f'{IMG_DIR}background.jpeg').convert()
             # Scale the background to fit the map size
-            # map_width = len(self.grid[0]) * TILE_SIZE
-            # map_height = len(self.grid) * TILE_SIZE
-            # self.background = pygame.transform.scale(self.background, (map_width, map_height))
+            self.background = pygame.image.load(f'{IMG_DIR}background.jpeg').convert()
+            self.background = pygame.transform.scale(self.background, (SCREEN_WIDTH, SCREEN_HEIGHT))
+           
         except pygame.error as e:
             print(f"Could not load background image: {e}")
             # Create a fallback background surface
@@ -115,12 +114,18 @@ class Game:
                 tile_surface = pygame.Surface((slot_size, slot_size), pygame.SRCALPHA)
 
                 tile_surface.blit(slot["img"], (0, 0))
-                font = pygame.font.SysFont(None, 24)
+                  # Create text surface first
+                font = pygame.font.SysFont(None, 32)
                 count_text = f"{player.inventory_items[slot['type']]['count']}"
-                text_surface = font.render(count_text, True, BLACK)  
-                text_rect = text_surface.get_rect(center=(cur_box_x + slot_size // 2, y_pos + slot_size // 2))
+                text_surface = font.render(count_text, True, RED)
+                
+                # Calculate text position relative to tile_surface
+                text_x = (slot_size - text_surface.get_width()) // 2
+                text_y = (slot_size - text_surface.get_height()) // 2
+                
+                # Blit text directly onto tile_surface at calculated position
+                tile_surface.blit(text_surface, (text_x, text_y))
 
-                tile_surface.blit(text_surface, text_rect)
             
             screen.blit(tile_surface, tile_pos)
             tile_rect = pygame.Rect(tile_pos, (slot_size, slot_size))
@@ -207,12 +212,12 @@ class Game:
             attempts += 1
             
             # Generate random position
-            x = random.randint(0, SCREEN_WIDTH - TILE_SIZE*3)
-            y = random.randint(0, SCREEN_HEIGHT - TILE_SIZE*3)
+            x = random.randint(0, SCREEN_WIDTH - TILE_SIZE*5)
+            y = random.randint(0, SCREEN_HEIGHT - TILE_SIZE*5)
             
-            # Larger patches (3x3 tiles instead of 2x2)
-            patch_width = TILE_SIZE * 3
-            patch_height = TILE_SIZE * 3
+            # Create larger patches (5x5 tiles)
+            patch_width = TILE_SIZE * (4 + random.randint(1, 3))  # 4-6 tiles wide
+            patch_height = TILE_SIZE * (4 + random.randint(1, 3))  # 4-6 tiles high
             
             # Create a temporary rect to check for overlaps
             temp_rect = pygame.Rect(x, y, patch_width, patch_height)
