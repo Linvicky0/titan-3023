@@ -41,8 +41,8 @@ def check_monster_collision(monster, dx, dy):
         # Choose a new random direction
         directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
         new_direction = random.choice(directions)
-        new_dx = new_direction[0] * DEFAULT_SPEED
-        new_dy = new_direction[1] * DEFAULT_SPEED
+        new_dx = new_direction[0] * DEFAULT_SPEED*2
+        new_dy = new_direction[1] * DEFAULT_SPEED*2
 
         # Attempt to move in the new direction
         monster.move(new_dx, new_dy)
@@ -117,6 +117,8 @@ class Game:
         self.running = True
         self.last_rain_time = time.time()
         self.rain_interval = random.randint(15, 30)  # Random interval between rain events
+        self.start_time = time.time()
+        self.max_duration = 60  # sec
 
     def draw_inventory(self, player):
        # generate boxes for inventory
@@ -150,7 +152,7 @@ class Game:
             pygame.draw.rect(screen, (0, 0, 0), tile_rect, width=3)
             cur_box_x += slot_size
             
-        
+
     def draw(self, screen):
         # Draw the background image first, then inventory, then sprites
         screen.blit(self.map.background, (0, 0))
@@ -172,14 +174,20 @@ class Game:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
-        
-        # Game Over event: prints message to screen and exits 
+
+    # Timer check
+        if time.time() - self.start_time > self.max_duration:
+         global GAME_END
+         GAME_END = "timeout"
+         self.running = False
+
+    # Game over due to health loss
         if self.player.life_bar.current_life <= 0:
-            screen.fill((255, 255, 255)) 
-            draw_text("Game over", text_font, (0, 0, 0), 220, 150)
-            pygame.display.update()
-            time.sleep(5)
-            self.running = False 
+         screen.fill((255, 255, 255)) 
+         draw_text("Game over", text_font, (0, 0, 0), 220, 150)
+         pygame.display.update()
+         time.sleep(5)
+         self.running = False 
         
                 
         # Handle player movement with keys
@@ -206,8 +214,8 @@ class Game:
 
         D = [(-1, 0), (0, 1), (0, -1), (1, 0)]
         for monster in monster_group:
-            x = random.choice([-1*(DEFAULT_SPEED*2), DEFAULT_SPEED])
-            y = random.choice([-1*(DEFAULT_SPEED*2), DEFAULT_SPEED])
+            x = random.choice([-1*(DEFAULT_SPEED*2), DEFAULT_SPEED*4])
+            y = random.choice([-1*(DEFAULT_SPEED*2), DEFAULT_SPEED*4])
             check_monster_collision(monster, x, y) 
 
 
@@ -252,26 +260,48 @@ class Game:
 
 
     def render(self):
-        if (not GAME_END):
+        if not GAME_END:
             self.draw(screen)
             self.player.life_bar.draw(screen)
+
+        # Show remaining time
+            remaining_time = max(0, int(self.max_duration - (time.time() - self.start_time)))
+            font = pygame.font.SysFont(None, 36)
+            timer_text = font.render(f"Time Left: {remaining_time}", True, BLACK)
+            timer_rect = timer_text.get_rect()
+            timer_rect.bottomleft = (200, 10) 
+
+        # Optional: white background for timer box
+            timer_bg = pygame.Surface((timer_text.get_width() + 10, timer_text.get_height() + 6))
+            timer_bg.fill(WHITE)
+            screen.blit(timer_bg, (250, 8))
+            screen.blit(timer_text, (250, 8))
+
             pygame.display.flip()
 
         else:
             screen.fill(BLACK)
             font = pygame.font.SysFont(None, 55)
-            text = "Timer Up!\n\n"
-            if (GAME_END == "finished"):
-                text = "Congrats on finishing!\n\n"
-            
-            score = 0
-            for item_class, info in self.player.inventory_slots().items():
-                score += info["count"] * item_class.reward
-            
-            text += f"Score: {score}"
-            display_text = font.render(text, True, (255, 255, 255))
-            screen.blit(display_text, (250, 250))
-            pygame.display.flip()
+        text = ''
+        # ✅ Always define `text` first
+        if GAME_END == "finished":
+             text = "Timer Up!"
+
+            #text = "Congrats on finishing!"
+        
+        score = 0
+        for item_class, info in self.player.inventory_items.items():
+            if hasattr(item_class, 'reward'):  # Ensure item class has a reward attribute
+                count = info.get("count", 0)  # Access the count correctly
+                score += count * item_class.reward  # C
+
+        # Draw result text
+        text_surface = font.render(text, True, WHITE)
+        screen.blit(text_surface, (250, 200))
+
+        # Draw score
+     #
+        pygame.display.flip()
 
         
     def run(self):
@@ -281,6 +311,7 @@ class Game:
             self.update_rain()  # Update rain patches
             self.render()
             clock.tick(60)  # 60 FPS
+
     
 
 # Main function
@@ -288,6 +319,7 @@ def main():
     game = Game()
     game.run()
     pygame.quit()
+    pygame.time.Clock().tick(60)
     sys.exit()
 
 if __name__ == "__main__":
