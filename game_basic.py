@@ -2,6 +2,8 @@ import pygame
 import sys
 import os  # For path handling
 
+from items import Booster 
+
 # Initialize Pygame
 pygame.init()
 
@@ -26,7 +28,7 @@ clock = pygame.time.Clock()
 # Player class
 class Player:
     def __init__(self):
-        self.rect = pygame.Rect(100, 100, 32, 32)
+        self.rect = pygame.Rect(100, 100, 32, 32) # left, top, width, height 
         self.color = BLUE
         self.speed = PLAYER_SPEED
         
@@ -103,6 +105,8 @@ class Map:
 # Game class
 class Game:
     def __init__(self):
+        # by default generates four (4) boosters 
+        self.boosters = [ Booster(), Booster(), Booster(), Booster() ] 
         self.player = Player()
         self.map = Map()
         self.running = True
@@ -132,14 +136,24 @@ class Game:
         
         if not self.map.check_collision(temp_rect):
             self.player.move(dx, dy)
+
+        # removes booster upon collision 
+        for booster in self.boosters:
+            if temp_rect.colliderect(booster):
+                self.boosters.remove(booster)
+
     
     def update(self):
         pass
-        
+    
+    # initial game screen 
     def render(self):
         screen.fill(BLACK)
         self.map.draw(screen)
         self.player.draw(screen)
+        # populates screen with booster items 
+        for item in self.boosters: 
+            item.draw(screen)
         pygame.display.flip()
         
     def run(self):
