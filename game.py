@@ -1,11 +1,17 @@
 import pygame
 from pygame.locals import *
 from objects import *
-import sys
-import os  
-import random
+import sys, os, random
 import time  # Add this import for timing
 from rain import RainPatch  # Import the RainPatch class
+
+########################################
+# FIXME testing some font functionality 
+
+pygame.font.init() # you have to call this at the start, 
+                   # if you want to use this module.
+my_font = pygame.font.SysFont('Comic Sans MS', 30)
+
 
 
 GAME_END = None
@@ -45,9 +51,12 @@ def check_collision(creature, dx, dy):
     # Check if player is in rain
     if isinstance(creature, Player):
         rain_hits = pygame.sprite.spritecollide(creature, rain_group, False)
+        # player slows down when in rain, resumes normal speed otherwise 
         if rain_hits:
             creature.life_bar.update(0.1)
-            creature.speed = 2
+            creature.speed = 2 
+        else:
+            creature.speed = 3
 
 
 class Map:
@@ -97,7 +106,6 @@ class Game:
         self.running = True
         self.last_rain_time = time.time()
         self.rain_interval = random.randint(15, 30)  # Random interval between rain events
-        
     
     def assign_tile(self, row, col):
         if row == 0 or col == 0 or col == len(self.tiles) or row == len(self.tiles):
@@ -112,6 +120,14 @@ class Game:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
+        
+        # Game Over event 
+        # currently this waits 5 seconds and quits upon 'death' 
+        # TODO: print appropriate text to screen 
+        if self.player.life_bar.current_life <= 0:
+            time.sleep(5)
+            self.running = False 
+        
                 
         # Handle player movement with keys
         keys = pygame.key.get_pressed()
@@ -136,8 +152,8 @@ class Game:
     
     def update_monsters(self):
         for monster in monster_group:
-            check_collision(monster, DEFAULT_SPEED, 0)        
-        
+            check_collision(monster, monster.rect.x + DEFAULT_SPEED, monster.rect.y + DEFAULT_SPEED)        
+
     def update_rain(self):
         # Update existing rain patches
         rain_group.update()
