@@ -16,3 +16,7 @@ Team members:
 - Stiffany Villanueva
 - Vicky Lin
 - Rachel Wu
+
+
+How to play:
+Run `python game.py` after cloning repository
