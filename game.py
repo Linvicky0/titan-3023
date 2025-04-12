@@ -4,6 +4,8 @@ from objects import *
 import sys
 import os  
 import random
+import time  # Add this import for timing
+from rain import RainPatch  # Import the RainPatch class
 
 
 GAME_END = None
@@ -15,6 +17,8 @@ pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Start Game")
 clock = pygame.time.Clock()
+rain_group = pygame.sprite.Group()
+
 
 def check_collision(creature, dx, dy):
 
@@ -71,13 +75,13 @@ class Game:
     def __init__(self, num_tiles = 16):
         self.player = Player(0, 0)
 
-       
-
         self.tiles = [[0] * num_tiles] * num_tiles
         print(len(sprite_group)) # 1 player = 1 sprite
         self.map = Map(self.player, self)
         print(len(sprite_group)) # 16 * 16 = 256 sprites
         self.running = True
+        self.last_rain_time = time.time()
+        self.rain_interval = random.randint(15, 30)  # Random interval between rain events
 
     def draw_inventory(self, player):
        # generate boxes for inventory
@@ -105,7 +109,6 @@ class Game:
                 text_rect = text_surface.get_rect(center=(cur_box_x + slot_size // 2, y_pos + slot_size // 2))
 
                 tile_surface.blit(text_surface, text_rect)
-                # screen.blit(img_surface, tile_pos)
             
             screen.blit(tile_surface, tile_pos)
             tile_rect = pygame.Rect(tile_pos, (slot_size, slot_size))
@@ -118,6 +121,7 @@ class Game:
         screen.blit(self.map.background, (0, 0))
         self.draw_inventory(self.player)
         sprite_group.draw(screen)
+        rain_group.draw(screen)
     
     def assign_tile(self, row, col):
         if row == 0 or col == 0 or col == len(self.tiles) or row == len(self.tiles):
@@ -152,7 +156,45 @@ class Game:
         for monster in monster_group:
             x = random.choice([-1*(DEFAULT_SPEED*2), DEFAULT_SPEED])
             y = random.choice([-1*(DEFAULT_SPEED*2), DEFAULT_SPEED])
-            check_collision(monster, x, y)        
+            check_collision(monster, x, y) 
+
+    def update_rain(self):
+        # Update existing rain patches
+        rain_group.update()
+        
+        # Check if it's time to create new rain
+        current_time = time.time()
+        if current_time - self.last_rain_time > self.rain_interval:
+            self.create_rain_patches()
+            self.last_rain_time = current_time
+            self.rain_interval = random.randint(15, 30)  # Set next rain interval
+    
+    def create_rain_patches(self):
+        # Create 1-2 rain patches at random locations (reduced from 2-4)
+        num_patches = random.randint(1, 2)
+        attempts = 0
+        patches_created = 0
+        
+        while patches_created < num_patches and attempts < 20:  # Limit attempts to prevent infinite loop
+            attempts += 1
+            
+            # Generate random position
+            x = random.randint(0, SCREEN_WIDTH - TILE_SIZE*3)
+            y = random.randint(0, SCREEN_HEIGHT - TILE_SIZE*3)
+            
+            # Larger patches (3x3 tiles instead of 2x2)
+            patch_width = TILE_SIZE * 3
+            patch_height = TILE_SIZE * 3
+            
+            # Create a temporary rect to check for overlaps
+            temp_rect = pygame.Rect(x, y, patch_width, patch_height)
+            
+            # Check if this position would overlap with existing rain patches
+            if not RainPatch.check_overlap(temp_rect, rain_group.sprites()):
+                # No overlap, create the rain patch
+                rain_patch = RainPatch(x, y, patch_width, patch_height)
+                rain_group.add(rain_patch)
+                patches_created += 1       
         
 
     def render(self):
@@ -182,6 +224,7 @@ class Game:
         while self.running:
             self.process_events()
             self.update_monsters()
+            self.update_rain()  # Update rain patches
             self.render()
             clock.tick(60)  # 60 FPS
     
