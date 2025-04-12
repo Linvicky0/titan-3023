@@ -12,7 +12,7 @@ import os
 # All objects are one of these 3 categories: blank tile, collectible, or a block (can't move through it)
 
 sprite_group = pygame.sprite.Group()
-IMG_DIR = "/Users/qingshen/Downloads/titan-3023-main/titan-3023/img/"
+IMG_DIR = "img/"
 
 
 class BaseTile(pygame.sprite.Sprite):
@@ -49,6 +49,8 @@ class Collectible(BaseTile):
         object_type = type(self)
         if (object_type in player.inventory_items):
                 player.inventory_items[object_type]["count"] += 1
+                player.show_popup(self.name, self.description)
+
         else:
             slot_indices = [i for i in range(len(player.inventory_slots))]
             free_slots = list(filter(lambda i: player.inventory_slots[i] == 0, slot_indices))
@@ -57,6 +59,8 @@ class Collectible(BaseTile):
             # check if inventory is full
             if len(free_slots) == 1: # this slot is now used
                 GAME_END = "finished"
+        
+        player.show_popup(self.name, self.description)
         sprite_group.remove(self)
        
 
@@ -91,15 +95,56 @@ class Monster(Block):
 class Herb(Collectible):
 
     def __init__(self, x, y):
-        super().__init__(x, y, pygame.image.load(f"{IMG_DIR}herb.png"))     
+        image = pygame.image.load(os.path.join(IMG_DIR, "herb.png")).convert_alpha()
+        super().__init__(x, y,image)
+        self.name = "herb"
+        self.description_lines = [
+            "Habitat: Grows along methane lake edges, thrives in darkness",
+            "Appearance: Bioluminescent tendrils with soft cyan glow",
+            "Effect: Restores visibility during Titan's long night",
+            "Use: Craft light patches to reveal map areas or attract creatures"
+        ]
+
+    def collect_item(self, player):
+        player.show_popup(self.name, self.description_lines)
+        sprite_group.remove(self) 
         self.reward = 5
+
+class Glowvine(Collectible):
+    def __init__(self, x, y):
+        image = pygame.image.load(os.path.join(IMG_DIR, "herb", "Glowvine.png")).convert_alpha()
+        super().__init__(x, y,image)
+        self.name = "Glowvine"
+        self.description_lines = [
+            "Habitat: Grows along methane lake edges, thrives in darkness",
+            "Appearance: Bioluminescent tendrils with soft cyan glow",
+            "Effect: Restores visibility during Titan's long night",
+            "Use: Craft light patches to reveal map areas or attract creatures"
+        ]
+
+    def collect_item(self, player):
+        player.show_popup(self.name, self.description_lines)
+        sprite_group.remove(self)
+
 
 class Bacteria(Collectible):
 
     def __init__(self, x, y):
         # print("Bacteria created")
-        super().__init__(x, y, pygame.image.load(f"{IMG_DIR}bacteria.png"))
+        image = pygame.image.load(os.path.join(IMG_DIR, "bacteria.png")).convert_alpha()
+        super().__init__(x, y,image)
+        self.name = "bactria"
+        self.description_lines = [
+            "Habitat: Grows along methane lake edges, thrives in darkness",
+            "Appearance: Bioluminescent tendrils with soft cyan glow",
+            "Effect: Restores visibility during Titan's long night",
+            "Use: Craft light patches to reveal map areas or attract creatures"
+        ]
         self.reward = 10
+
+    def collect_item(self, player):
+        player.show_popup(self.name, self.description_lines)
+        sprite_group.remove(self)
 
         
 class Mysterious(Block):
@@ -130,6 +175,11 @@ class Player(Block):
         self.inventory_items = {} # map object type to their slot and count
         self.inventory_slots = [0] * int(len(ITEMS)/2) # 0 means slot is unused
         self.life_bar = LifeBar(max_life=100, x=10, y=10, width=200, height=20)
+
+        self.popup_text = None
+        self.popup_timer = 0
+        self.popup_duration = 5000  # milliseconds = 3 seconds
+
         
     def move(self, dx, dy):
         # Move the player while checking for collisions with map boundaries
@@ -137,9 +187,14 @@ class Player(Block):
             self.rect.x += dx
         if 0 <= self.rect.y + dy <= SCREEN_HEIGHT - self.rect.height:
             self.rect.y += dy
-            
+    
+    def show_popup(self, title, description_lines):
+        self.popup_text = (title, description_lines)
+        self.popup_timer = pygame.time.get_ticks()
 
-ITEMS = [BaseTile, Block, Herb, Bacteria, Mysterious]
+
+ITEMS = [BaseTile, Block, Herb, Glowvine, Bacteria, Mysterious]
+
 
         
  

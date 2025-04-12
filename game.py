@@ -1,8 +1,10 @@
 import pygame
+import os  
 from pygame.locals import *
 from objects import *
+from start_page import InfoPage
+from constants import HERB_DATA
 import sys
-import os  
 import random
 
 
@@ -31,11 +33,13 @@ class Map:
         
         # Load background image
         try:
-            self.background = pygame.image.load(f'{IMG_DIR}background.jpeg').convert()
+            self.background = pygame.image.load(f'{IMG_DIR}background/background.jpeg').convert()
             # Scale the background to fit the map size
-            # map_width = len(self.grid[0]) * TILE_SIZE
-            # map_height = len(self.grid) * TILE_SIZE
-            # self.background = pygame.transform.scale(self.background, (map_width, map_height))
+            #self.grid = game.tiles
+            #map_width = len(self.grid[0]) * TILE_SIZE
+            #map_height = len(self.grid) * TILE_SIZE
+            #self.background = pygame.transform.scale(self.background, (map_width, map_height)).convert()
+            #self.background = pygame.transform.scale(self.background, (map_width, map_height))
         except pygame.error as e:
             print(f"Could not load background image: {e}")
             # Create a fallback background surface
@@ -43,13 +47,26 @@ class Map:
             self.background.fill(GREEN)
         
    
-        
+
     def draw(self, surface):
         # Draw the background image first
         surface.blit(self.background, (0, 0))
         # print(len(sprite_group))
         sprite_group.draw(screen)
         
+
+    def draw_popup(self, surface, title, description_lines, font):
+        popup_rect = pygame.Rect(80, 400, 640, 160)
+        pygame.draw.rect(surface, (255, 255, 255), popup_rect)
+        pygame.draw.rect(surface, (0, 0, 0), popup_rect, 3)
+
+        title_surf = font.render(title, True, (0, 100, 0))
+        text_rect = title_surf.get_rect(center=(80 + 640 // 2, 400 + 160 // 2))
+        surface.blit(title_surf, (popup_rect.x + 20, popup_rect.y + 10))
+
+        for i, line in enumerate(description_lines):
+            line_surf = font.render(line, True, (50, 50, 50))
+            surface.blit(line_surf, (popup_rect.x + 20, popup_rect.y + 50 + i * 25))
 
     def check_collision(self, player, dx, dy):
 
@@ -81,6 +98,8 @@ class Game:
         self.monsters = pygame.sprite.Group()
         self.monsters.add(Monster(5, 5))  # Place monster at (5,5)
         sprite_group.add(*self.monsters) 
+        self.show_info_page = False
+        self.info_page = InfoPage()
     
     def assign_tile(self, row, col):
         if row == 0 or col == 0 or col == len(self.tiles) or row == len(self.tiles):
@@ -95,6 +114,16 @@ class Game:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_i:
+                    self.show_info_page = not self.show_info_page
+                elif event.key == pygame.K_ESCAPE and self.show_info_page:
+                    self.show_info_page = False
+                elif self.show_info_page:
+                    if event.key == pygame.K_UP:
+                        self.info_page.scroll(-30)
+                    elif event.key == pygame.K_DOWN:
+                        self.info_page.scroll(30)
                 
         # Handle player movement with keys
         keys = pygame.key.get_pressed()
@@ -119,8 +148,19 @@ class Game:
         pass
         
     def render(self):
+        if self.show_info_page:
+            self.info_page.draw(screen)
+            pygame.display.flip()
+            return
         if (not GAME_END):
             # screen.fill(BLACK)
+            if self.player.popup_text:
+                now = pygame.time.get_ticks()
+                if now - self.player.popup_timer < self.player.popup_duration:
+                    font = pygame.font.SysFont(None, 24)
+                    self.map.draw_popup(screen, *self.player.popup_text, font)
+                else:
+                    self.player.popup_text = None
             self.map.draw(screen)
             self.player.life_bar.draw(screen)
             pygame.display.flip()
@@ -143,11 +183,52 @@ class Game:
 
         
     def run(self):
+        self.show_start_screen()
         while self.running:
             self.process_events()
             self.update()
             self.render()
             clock.tick(60)  # 60 FPS
+    
+
+    def show_start_screen(self):
+        background = pygame.image.load(os.path.join(IMG_DIR, "background", "start_background2.png")).convert()
+        background = pygame.transform.scale(background, (SCREEN_WIDTH, SCREEN_HEIGHT))
+
+        font = pygame.font.SysFont(None, 36)
+        title_font = pygame.font.SysFont(None, 64)
+
+        while True:
+            screen.blit(background, (0, 0))
+
+            # Game title
+            title_text = title_font.render("🌌 Titan Exploration 🌌", True, (255, 255, 255))
+            screen.blit(title_text, (SCREEN_WIDTH//2 - title_text.get_width()//2, 50))
+
+            # Instructions
+            start_text = font.render("Press SPACE to start", True, (255, 255, 255))
+            info_text = font.render("Press I for Information • Press Q to Quit", True, (200, 200, 200))
+
+            screen.blit(start_text, (SCREEN_WIDTH//2 - start_text.get_width()//2, SCREEN_HEIGHT - 120))
+            screen.blit(info_text, (SCREEN_WIDTH//2 - info_text.get_width()//2, SCREEN_HEIGHT - 80))
+
+            pygame.display.flip()
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        return  # exit start screen and begin game
+                    elif event.key == pygame.K_q:
+                        pygame.quit()
+                        sys.exit()
+                    elif event.key == pygame.K_i:
+                        self.show_info_page = True
+                        return  # open game, info page will trigger right away
+
     
 
 # Main function
