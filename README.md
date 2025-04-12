@@ -5,4 +5,4 @@ Team members:
 - Camilla Easlick
 - Stiffany Villanueva
 - Vicky Lin
-- Xinyue Wu
+- Rachel Wu
