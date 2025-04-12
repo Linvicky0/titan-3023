@@ -15,7 +15,28 @@ pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Start Game")
 clock = pygame.time.Clock()
-    
+
+def check_collision(creature, dx, dy):
+
+    creature.move(dx, dy)
+
+    collided_blocks = pygame.sprite.spritecollide(creature, sprite_group, False)
+
+    for block in collided_blocks:
+
+        if (isinstance(block, Mysterious)):
+            block.reveal(creature)
+        
+        elif (isinstance(block, Block) and block != creature):
+            creature.move(-1 * dx, -1 * dy) # undo the move if this is a block collision
+        elif isinstance(block, Player) and isinstance(creature, Monster):
+                block.life_bar.take_damage(1)
+
+        elif isinstance(creature, Player) and isinstance(block, Monster):
+                creature.life_bar.take_damage(1)  
+                
+        elif (isinstance(block, Collectible) and isinstance(creature, Player)): # object is a collectible
+            block.collect_item(creature)
 
 class Map:
 
@@ -49,24 +70,6 @@ class Map:
         surface.blit(self.background, (0, 0))
         # print(len(sprite_group))
         sprite_group.draw(screen)
-        
-
-    def check_collision(self, player, dx, dy):
-
-        player.move(dx, dy)
-        collided_blocks = pygame.sprite.spritecollide(player, sprite_group, False)
-
-        for block in collided_blocks:
-
-            if (isinstance(block, Mysterious)):
-                block.reveal(player)
-
-            elif (isinstance(block, Block) and block != player):
-                # print("Undoing a move", type(block), self.tiles[0][0], block.rect)
-                player.move(-1 * dx, -1 * dy) # undo the move if this is a block collision
-
-            elif (isinstance(block, Collectible)): # object is a collectible
-                block.collect_item(player)
                 
 
 # Game class
@@ -107,11 +110,13 @@ class Game:
         if keys[pygame.K_DOWN] or keys[pygame.K_s]:
             dy = self.player.speed
             
-        self.map.check_collision(self.player, dx, dy)
+        check_collision(self.player, dx, dy)
     
-    def update(self):
-        pass
+    def update_monsters(self):
+        for monster in monster_group:
+            check_collision(monster, monster.rect.x + DEFAULT_SPEED, monster.rect.y + DEFAULT_SPEED)        
         
+
     def render(self):
         if (not GAME_END):
             self.map.draw(screen)
@@ -138,7 +143,7 @@ class Game:
     def run(self):
         while self.running:
             self.process_events()
-            self.update()
+            self.update_monsters()
             self.render()
             clock.tick(60)  # 60 FPS
     

@@ -11,7 +11,7 @@ from life_bar import LifeBar
 # All objects are one of these 3 categories: blank tile, collectible, or a block (can't move through it)
 
 sprite_group = pygame.sprite.Group()
-
+monster_group = pygame.sprite.Group()
 
 class BaseTile(pygame.sprite.Sprite):
 
@@ -21,6 +21,13 @@ class BaseTile(pygame.sprite.Sprite):
         self.rect = pygame.Rect(x*TILE_SIZE, y*TILE_SIZE, TILE_SIZE, TILE_SIZE)
         self.image = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
         sprite_group.add(self)
+    
+    def move(self, dx, dy):
+        # Move the player while checking for collisions with map boundaries
+        if 0 <= self.rect.x + dx <= SCREEN_WIDTH - self.rect.width:
+            self.rect.x += dx
+        if 0 <= self.rect.y + dy <= SCREEN_HEIGHT - self.rect.height:
+            self.rect.y += dy
     
 
 class Block(BaseTile):
@@ -66,7 +73,8 @@ class Monster(Block):
         super().__init__(x, y, pygame.image.load(f"{IMG_DIR}monster.png"))
         self.speed = DEFAULT_SPEED
         self.health = 100
-
+        monster_group.add(self)
+        
 
 class Herb(Collectible):
 
@@ -82,7 +90,6 @@ class Bacteria(Collectible):
 
         
 class Mysterious(Block):
-
 
     def reveal(self, player):
         # Create a creature object on the fly after user touched this block
@@ -108,12 +115,7 @@ class Player(Block):
         self.inventory_slots = [0] * int(len(ITEMS)/2) # 0 means slot is unused
         self.life_bar = LifeBar(max_life=100, x=10, y=10, width=200, height=20)
         
-    def move(self, dx, dy):
-        # Move the player while checking for collisions with map boundaries
-        if 0 <= self.rect.x + dx <= SCREEN_WIDTH - self.rect.width:
-            self.rect.x += dx
-        if 0 <= self.rect.y + dy <= SCREEN_HEIGHT - self.rect.height:
-            self.rect.y += dy
+   
             
 
 ITEMS = [BaseTile, Block, Herb, Bacteria, Mysterious]
