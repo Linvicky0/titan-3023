@@ -66,27 +66,15 @@ class Map:
      
         # creating the rest (15 rows) with 16 tiles in each row
         game.tiles[1:] = [[game.assign_tile(col, row) for col in range(16)] for row in range(1, 16)]
-        
-        # Load background image
-        try:
-            self.background = pygame.image.load(f'{IMG_DIR}background.jpeg').convert()
-            # Scale the background to fit the map size
-            # map_width = len(self.grid[0]) * TILE_SIZE
-            # map_height = len(self.grid) * TILE_SIZE
-            # self.background = pygame.transform.scale(self.background, (map_width, map_height))
-        except pygame.error as e:
-            print(f"Could not load background image: {e}")
-            # Create a fallback background surface
-            self.background = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
-            self.background.fill(GREEN)
-        
+
+        self.background = pygame.image.load(f'{IMG_DIR}background.jpeg').convert()
+        self.background = pygame.transform.scale(self.background, (SCREEN_WIDTH, SCREEN_HEIGHT))
    
 
 # Game class
 class Game:
     def __init__(self, num_tiles = 16):
         self.player = Player(0, 0)
-
         self.tiles = [[0] * num_tiles] * num_tiles
         # print(len(sprite_group)) # 1 player = 1 sprite
         self.map = Map(self.player, self)
@@ -103,25 +91,28 @@ class Game:
         y_pos = SCREEN_HEIGHT - slot_size
         cur_box_x = start_index * TILE_SIZE
         for box in range(num_slots):
-                
             tile_surface = pygame.Surface((slot_size, slot_size), pygame.SRCALPHA)
             tile_surface.fill((*BLUE, 50))
             tile_pos = (cur_box_x, y_pos)
-
 
             slot = player.inventory_slots[box]
 
             if slot:
                 tile_surface = pygame.Surface((slot_size, slot_size), pygame.SRCALPHA)
-
                 tile_surface.blit(slot["img"], (0, 0))
-                font = pygame.font.SysFont(None, 24)
+                
+                # Create text surface first
+                font = pygame.font.SysFont(None, 32)
                 count_text = f"{player.inventory_items[slot['type']]['count']}"
-                text_surface = font.render(count_text, True, BLACK)  
-                text_rect = text_surface.get_rect(center=(cur_box_x + slot_size // 2, y_pos + slot_size // 2))
+                text_surface = font.render(count_text, True, RED)
+                
+                # Calculate text position relative to tile_surface
+                text_x = (slot_size - text_surface.get_width()) // 2
+                text_y = (slot_size - text_surface.get_height()) // 2
+                
+                # Blit text directly onto tile_surface at calculated position
+                tile_surface.blit(text_surface, (text_x, text_y))
 
-                tile_surface.blit(text_surface, text_rect)
-            
             screen.blit(tile_surface, tile_pos)
             tile_rect = pygame.Rect(tile_pos, (slot_size, slot_size))
             pygame.draw.rect(screen, (0, 0, 0), tile_rect, width=3)
