@@ -37,7 +37,7 @@ HERB_DATA = [
     },
     {
         "name": "Dreamplume",
-        "image": os.path.join(IMG_DIR, "herb", "dreamplume.png"),
+        "image": os.path.join(IMG_DIR, "herb", "Dreamplume.png"),
         "description": [
             "Habitat: Hidden within dusty caves.",
             "Appearance: Wispy purple petals glowing softly.",
@@ -46,13 +46,43 @@ HERB_DATA = [
         ]
     },
     {
-        "name": "Bacteria",
-        "image": os.path.join(IMG_DIR, "bacteria.png"),
+        "name": "Iceburst Fern",
+        "image": os.path.join(IMG_DIR, "herb", "Iceburst_Fern.png"),
         "description": [
-            "Habitat: Clings to methane ice or cave walls.",
-            "Appearance: Blue cellular blob with antennae.",
-            "Effect: Digests nitrogen, produces trace oxygen.",
-            "Use: Power bio-reactors or terraforming tech."
+            "Habitat: Windswept dune fields.",
+            "Appearance: Spiky leaves that freeze on contact with air.",
+            "Effect: Temporarily reduces body temperature in volcanic zones.",
+            "Use: Ingredient for 'coolant paste', useful near cryovolcanoes."
+        ]
+    },
+    {
+        "name": "Nitrobloom",
+        "image": os.path.join(IMG_DIR, "herb", "Nitrobloom.png"),
+        "description": [
+            "Habitat: Fertile rocky ridges, nitrogen-rich ground.",
+            "Appearance: Puffy, bright-orange flowers that pulse faintly.",
+            "Effect: Slight stamina boost, slows hunger.",
+            "Use: Add to meals or craft biostimulants."
+        ]
+    },
+    {
+        "name": "Furnace Root",
+        "image": os.path.join(IMG_DIR, "herb", "Furnace_Root.png"),
+        "description": [
+            "Habitat: Around cryovolcano vents.",
+            "Appearance: Twisted, glowing root with red sap.",
+            "Effect: Generates heat, combats hypothermia.",
+            "Use: Craft thermal modules for greenhouses or suits."
+        ]
+    },
+    {
+        "name": "Resonant Moss",
+        "image": os.path.join(IMG_DIR, "herb", "Resonant_Moss.png"),
+        "description": [
+            "Habitat: Ice cave walls and shaded valleys.",
+            "Appearance: Velvet-like moss that vibrates faintly.",
+            "Effect: Stores kinetic energy.",
+            "Use: Essential for crafting battery packs or sonar tools."
         ]
     }
 ]

@@ -11,7 +11,7 @@ class InfoPage:
         self.herb_entries = []
         for herb in HERB_DATA:
             image = pygame.image.load(herb["image"]).convert_alpha()
-            image = pygame.transform.scale(image, (64, 64))
+            image = pygame.transform.scale(image, (96, 96))
             self.herb_entries.append({
                 "name": herb["name"],
                 "image": image,
@@ -24,7 +24,7 @@ class InfoPage:
 
         for entry in self.herb_entries:
             # Herb image
-            surface.blit(entry["image"], (40, y))
+            surface.blit(entry["image"], (10, y))
             # Name
             name_surf = self.title_font.render(entry["name"], True, (180, 255, 180))
             surface.blit(name_surf, (120, y))
