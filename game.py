@@ -1,11 +1,17 @@
 import pygame
 from pygame.locals import *
 from objects import *
-import sys
-import os  
-import random
+import sys, os, random
 import time  # Add this import for timing
 from rain import RainPatch  # Import the RainPatch class
+
+########################################
+# FIXME testing some font functionality 
+
+pygame.font.init() # you have to call this at the start, 
+                   # if you want to use this module.
+my_font = pygame.font.SysFont('Comic Sans MS', 30)
+
 
 
 GAME_END = None
@@ -100,7 +106,6 @@ class Game:
         self.running = True
         self.last_rain_time = time.time()
         self.rain_interval = random.randint(15, 30)  # Random interval between rain events
-        
     
     def assign_tile(self, row, col):
         if row == 0 or col == 0 or col == len(self.tiles) or row == len(self.tiles):
@@ -117,8 +122,10 @@ class Game:
                 self.running = False
         
         # Game Over event 
-        if self.player.life_bar.current_life == 0:
-            show_Message(window, "You lose.")
+        # currently this waits 5 seconds and quits upon 'death' 
+        # TODO: print appropriate text to screen 
+        if self.player.life_bar.current_life <= 0:
+            time.sleep(5)
             self.running = False 
         
                 
