@@ -34,7 +34,7 @@ class RainPatch(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
         self.creation_time = time.time()
-        self.duration = 30  # Duration in seconds
+        self.duration = 20  # Duration in seconds
         
         # Create raindrops for animation
         self.raindrops = []

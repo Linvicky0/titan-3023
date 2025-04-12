@@ -5,12 +5,10 @@ import sys, os, random
 import time  # Add this import for timing
 from rain import RainPatch  # Import the RainPatch class
 
-########################################
-# FIXME testing some font functionality 
+from text import draw_text, text_font # to print text to the screen
 
-pygame.font.init() # you have to call this at the start, 
-                   # if you want to use this module.
-my_font = pygame.font.SysFont('Comic Sans MS', 30)
+
+
 
 
 
@@ -53,7 +51,7 @@ def check_collision(creature, dx, dy):
         rain_hits = pygame.sprite.spritecollide(creature, rain_group, False)
         # player slows down when in rain, resumes normal speed otherwise 
         if rain_hits:
-            creature.life_bar.update(0.1)
+            creature.life_bar.update(0.1) 
             creature.speed = 2 
         else:
             creature.speed = 3
@@ -106,6 +104,8 @@ class Game:
         self.running = True
         self.last_rain_time = time.time()
         self.rain_interval = random.randint(15, 30)  # Random interval between rain events
+
+
     
     def assign_tile(self, row, col):
         if row == 0 or col == 0 or col == len(self.tiles) or row == len(self.tiles):
@@ -121,10 +121,11 @@ class Game:
             if event.type == pygame.QUIT:
                 self.running = False
         
-        # Game Over event 
-        # currently this waits 5 seconds and quits upon 'death' 
-        # TODO: print appropriate text to screen 
+        # Game Over event: prints message to screen and exits 
         if self.player.life_bar.current_life <= 0:
+            screen.fill((255, 255, 255)) 
+            draw_text("Game over", text_font, (0, 0, 0), 220, 150)
+            pygame.display.update()
             time.sleep(5)
             self.running = False 
         
