@@ -31,12 +31,13 @@ class BaseTile(pygame.sprite.Sprite):
             self.rect.y += dy
     
 
+
 class Block(BaseTile):
     
-    def __init__(self, x, y, img = None):
+    def __init__(self, x, y, img = None, color = BROWN):
         super().__init__(x, y)
         if not img:
-            self.image.fill(BROWN)
+            self.image.fill(color)
         else:
             self.image = pygame.transform.scale(img, (TILE_SIZE - 5, TILE_SIZE - 5))
             self.rect = self.image.get_rect(topleft=(x * TILE_SIZE, y * TILE_SIZE))
@@ -59,7 +60,7 @@ class Collectible(BaseTile):
             slot_indices = [i for i in range(len(player.inventory_slots))]
             free_slots = list(filter(lambda i: player.inventory_slots[i] == 0, slot_indices))
             player.inventory_items[object_type] = {"count": 1, "slot": free_slots[0]}
-            player.inventory_slots[free_slots[0]] = True
+            player.inventory_slots[free_slots[0]] = {"img": self.image, "type": object_type}
             # check if inventory is full
             if len(free_slots) == 1: # this slot is now used
                 GAME_END = "finished"
@@ -116,8 +117,7 @@ class Player(Block):
         self.inventory_slots = [0] * int(len(ITEMS)/2) # 0 means slot is unused
         self.life_bar = LifeBar(max_life=100, x=10, y=10, width=200, height=20)
         
-   
-            
+    
 
 ITEMS = [BaseTile, Block, Herb, Bacteria, Mysterious]
 

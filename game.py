@@ -30,14 +30,14 @@ def check_collision(creature, dx, dy):
             creature.move(-1 * dx, -1 * dy) # undo the move if this is a block collision
         elif (isinstance(block, Collectible) and isinstance(creature, Player)): # object is a collectible
             block.collect_item(creature)
-            
+
         if isinstance(block, Player) and isinstance(creature, Monster):
                 block.life_bar.update(1)
 
         if isinstance(creature, Player) and isinstance(block, Monster):
                 creature.life_bar.update(1)  
 
-        
+
 
 class Map:
 
@@ -64,23 +64,60 @@ class Map:
         
    
         
-    def draw(self, surface):
-        # Draw the background image first
-        surface.blit(self.background, (0, 0))
-        # print(len(sprite_group))
-        sprite_group.draw(screen)
                 
 
 # Game class
 class Game:
     def __init__(self, num_tiles = 16):
         self.player = Player(0, 0)
+
+       
+
         self.tiles = [[0] * num_tiles] * num_tiles
         print(len(sprite_group)) # 1 player = 1 sprite
         self.map = Map(self.player, self)
         print(len(sprite_group)) # 16 * 16 = 256 sprites
         self.running = True
+
+    def draw_inventory(self, player):
+       # generate boxes for inventory
+        num_slots = len(player.inventory_slots)
+        start_index = (len(self.tiles) // 2) - (num_slots // 2)
+        slot_size = TILE_SIZE + 20
+        y_pos = SCREEN_HEIGHT - slot_size
+        cur_box_x = start_index * TILE_SIZE
+        for box in range(num_slots):
+                
+            tile_surface = pygame.Surface((slot_size, slot_size), pygame.SRCALPHA)
+            tile_surface.fill((*BLUE, 50))
+            tile_pos = (cur_box_x, y_pos)
+
+
+            slot = player.inventory_slots[box]
+
+            if slot:
+                tile_surface = pygame.Surface((slot_size, slot_size), pygame.SRCALPHA)
+
+                tile_surface.blit(slot["img"], (0, 0))
+                font = pygame.font.SysFont(None, 24)
+                count_text = f"{player.inventory_items[slot['type']]['count']}"
+                text_surface = font.render(count_text, True, BLACK)  
+                text_rect = text_surface.get_rect(center=(cur_box_x + slot_size // 2, y_pos + slot_size // 2))
+
+                tile_surface.blit(text_surface, text_rect)
+                # screen.blit(img_surface, tile_pos)
+            
+            screen.blit(tile_surface, tile_pos)
+            tile_rect = pygame.Rect(tile_pos, (slot_size, slot_size))
+            pygame.draw.rect(screen, (0, 0, 0), tile_rect, width=3)
+            cur_box_x += slot_size
+            
         
+    def draw(self, screen):
+        # Draw the background image first, then inventory, then sprites
+        screen.blit(self.map.background, (0, 0))
+        self.draw_inventory(self.player)
+        sprite_group.draw(screen)
     
     def assign_tile(self, row, col):
         if row == 0 or col == 0 or col == len(self.tiles) or row == len(self.tiles):
@@ -120,7 +157,7 @@ class Game:
 
     def render(self):
         if (not GAME_END):
-            self.map.draw(screen)
+            self.draw(screen)
             self.player.life_bar.draw(screen)
             pygame.display.flip()
 
