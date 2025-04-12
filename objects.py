@@ -163,7 +163,7 @@ class Player(Block):
             try:
                 self.image = self.sprites[self.direction][self.current_frame]
                 # Scale the image if needed
-                self.image = pygame.transform.scale(self.image, (TILE_SIZE, TILE_SIZE))
+                self.image = pygame.transform.scale(self.image, (TILE_SIZE-27, TILE_SIZE-27))
             except (KeyError, IndexError):
                 # Fallback if sprite loading fails
                 self.image = pygame.Surface((TILE_SIZE, TILE_SIZE))
