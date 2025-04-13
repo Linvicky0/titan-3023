@@ -10,10 +10,7 @@ import time  # Add this import for timing
 from rain import RainPatch  # Import the RainPatch class
 
 
-GAME_END = None
-
 pygame.init()
-
 
 text_font = pygame.font.SysFont("Arial", 30)
 
@@ -31,7 +28,6 @@ clock = pygame.time.Clock()
 rain_group = pygame.sprite.Group()
 
 
-
 def check_monster_collision(monster, dx, dy):
     # Move the monster
     monster.move(dx, dy)
@@ -39,22 +35,17 @@ def check_monster_collision(monster, dx, dy):
     # Check for collisions with the sprite group
     collided_sprites = pygame.sprite.spritecollide(monster, sprite_group, False)
 
-    # Define the types to check for
-    collision_types = (Block, Herb, Bacteria)
 
-    # Check if any collided sprite is an instance of the specified types
-    if any(isinstance(sprite, collision_types) for sprite in collided_sprites):
+    if any(isinstance(sprite, Block) for sprite in collided_sprites):
         # Undo the movement
         monster.move(-dx, -dy)
-
         # Choose a new random direction
         directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
         new_direction = random.choice(directions)
         new_dx = new_direction[0] * DEFAULT_SPEED
         new_dy = new_direction[1] * DEFAULT_SPEED
-
         # Attempt to move in the new direction
-        monster.move(new_dx, new_dy)
+        check_collision(monster, new_dx, new_dy)
 
 def check_collision(creature, dx, dy):
 
@@ -63,10 +54,10 @@ def check_collision(creature, dx, dy):
 
     for block in collided_blocks:
 
-        if (isinstance(block, Mysterious)):
+        if (isinstance(block, Mysterious) and isinstance(creature, Player)):
             block.reveal(creature)
         
-        elif (isinstance(block, Block) and block != creature):
+        if (isinstance(block, Block) and block != creature):
             creature.move(-1 * dx, -1 * dy) # undo the move if this is a block collision
         elif (isinstance(block, Collectible) and isinstance(creature, Player)): # object is a collectible
             block.collect_item(creature)
@@ -120,18 +111,20 @@ class Game:
         self.player = Player(0, 0)
 
         self.tiles = [[0] * num_tiles] * num_tiles
-        # print(len(sprite_group)) # 1 player = 1 sprite
         self.map = Map(self.player, self)
-        # print(len(sprite_group)) # 16 * 16 = 256 sprites
-        self.running = True
         self.last_rain_time = time.time()
         self.rain_interval = random.randint(15, 30)  # Random interval between rain events
         self.show_info_page = False
         self.info_page = InfoPage()
+        self.GAME_END = False
+        background = pygame.image.load(f"{BACKGROUND_DIR}start_background.png").convert()
+        self.start_background = pygame.transform.scale(background, (SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.start_time = time.time()
+        self.max_duration = 60
 
     def draw_inventory(self, player):
        # generate boxes for inventory
-        num_slots = len(player.inventory_slots)
+        num_slots = len(player.inventory_slots)//2
         start_index = (len(self.tiles) // 2) - (num_slots // 2)
         slot_size = TILE_SIZE + 20
         y_pos = SCREEN_HEIGHT - slot_size
@@ -166,14 +159,6 @@ class Game:
             tile_rect = pygame.Rect(tile_pos, (slot_size, slot_size))
             pygame.draw.rect(screen, (0, 0, 0), tile_rect, width=3)
             cur_box_x += slot_size
-            
-        
-    def draw(self, screen):
-        # Draw the background image first, then inventory, then sprites
-        screen.blit(self.map.background, (0, 0))
-        self.draw_inventory(self.player)
-        sprite_group.draw(screen)
-        rain_group.draw(screen)
 
 
     
@@ -184,12 +169,16 @@ class Game:
         if (isinstance(self.tiles[row][col-1], Block) and isinstance(self.tiles[row - 1][col + 1], Block)):
             return BaseTile(col, row)
         
-        return random.choice(ITEMS)(col, row)
+        generic_type = random.choice(MYSTERIOUS_CHOICES + [Mysterious])
+        if generic_type == Herb:
+            return random.choice(HERB_CHOICES)(col, row)
+
+        return generic_type(col, row)
 
     def process_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                self.running = False
+                self.GAME_END = "Quit Game Pressed"
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_i:
                     self.show_info_page = not self.show_info_page
@@ -206,7 +195,9 @@ class Game:
             screen.fill((255, 255, 255)) 
             draw_text(f"Game over, score: {self.player.score}", text_font, BLACK, SCREEN_WIDTH/3, SCREEN_HEIGHT/2)
             pygame.display.update()
-            self.running = False 
+            self.GAME_END = "Oops" 
+        elif time.time() - self.start_time > self.max_duration:
+            self.GAME_END = "Finished"
                 
         # Handle player movement with keys
         keys = pygame.key.get_pressed()
@@ -239,7 +230,6 @@ class Game:
     def update_rain(self):
         # Update existing rain patches
         rain_group.update()
-
         
         # Check if it's time to create new rain
         current_time = time.time()
@@ -278,53 +268,63 @@ class Game:
 
 
     def render(self):
+
+
         if self.show_info_page:
             self.info_page.draw(screen)
-            pygame.display.flip()
-            return
-        if (not GAME_END):
-
-            self.draw(screen)
-            self.player.life_bar.draw(screen)
-            pygame.display.flip()
-
         else:
-            screen.fill(BLACK)
-            font = pygame.font.SysFont(None, 55)
-            text = "Timer Up!\n\n"
-            
-            if (GAME_END == "finished"):
-                text = "Congrats on finishing!\n\n"
-            
-            score = 0
-            for item_class, info in self.player.inventory_slots().items():
-                score += info["count"] * item_class.reward
-            
-            text += f"Score: {score}"
-            display_text = font.render(text, True, (255, 255, 255))
-            screen.blit(display_text, (250, 250))
+            # Draw the background image first, then inventory, then sprites
+            screen.blit(self.map.background, (0, 0))
+            self.draw_inventory(self.player)
+            sprite_group.draw(screen)
+            rain_group.draw(screen)
+            self.player.life_bar.draw(screen)
+
+            # Display time bar
+            remaining_time = max(0, int(self.max_duration - (time.time() - self.start_time)))
+            font = pygame.font.SysFont(None, 36)
+            timer_text = font.render(f"Time Left: {remaining_time}", True, BLACK)
+            timer_rect = timer_text.get_rect()
+            timer_rect.bottomleft = (200, 10) 
+
+        # Optional: white background for timer box
+            timer_bg = pygame.Surface((timer_text.get_width() + 10, timer_text.get_height() + 6))
+            timer_bg.fill(WHITE)
+            screen.blit(timer_bg, (250, 8))
+            screen.blit(timer_text, (250, 8))
+
             pygame.display.flip()
+        
+        pygame.display.flip()
 
         
     def run(self):
         self.show_start_screen()
-        while self.running:
+        while not self.GAME_END:
             self.process_events()
             self.update_monsters()
             self.update_rain()  # Update rain patches
             self.render()
             clock.tick(60)  # 60 FPS
+        
+        screen.blit(self.start_background, (0, 0))
+        self.GAME_END += f"\nScore: {self.player.score}"
+
+        draw_text(self.GAME_END, text_font, BLACK, SCREEN_WIDTH/3, SCREEN_HEIGHT/2)
+
+        pygame.display.update()
+
+        time.sleep(5)
     
 
     def show_start_screen(self):
-        background = pygame.image.load(f"{BACKGROUND_DIR}start_background.png").convert()
-        background = pygame.transform.scale(background, (SCREEN_WIDTH, SCREEN_HEIGHT))
+        
 
         font = pygame.font.SysFont(None, 36)
         title_font = pygame.font.SysFont(None, 64)
 
         while True:
-            screen.blit(background, (0, 0))
+            screen.blit(self.start_background, (0, 0))
 
             # Game title
             title_text = title_font.render("🌌 Titan Exploration 🌌", True, (255, 255, 255))

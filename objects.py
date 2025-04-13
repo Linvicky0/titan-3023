@@ -1,12 +1,10 @@
 import pygame
 from constants import *
 import sys
-from game import GAME_END
 import random
 from life_bar import LifeBar
 from sprites import SpriteSheet
-import os
-
+import glob
 
 # END GAME WHEN TIMER UP OR INVENTORY FULL
 
@@ -66,22 +64,27 @@ class Collectible(BaseTile):
         assert(img) # collectibles should have an image
         self.image = pygame.transform.scale(img, (TILE_SIZE, TILE_SIZE))
         self.rect = self.image.get_rect(topleft=(x * TILE_SIZE, y * TILE_SIZE))
+
+        
         
     
     def collect_item(self, player):
         object_type = type(self)
-        player.score += object_type.reward
         if (object_type in player.inventory_items):
                 player.inventory_items[object_type]["count"] += 1
+                player.score += object_type.reward
 
         else:
-            slot_indices = [i for i in range(len(player.inventory_slots))]
+            slot_indices = [i for i in range(len(player.inventory_slots)//2)]
             free_slots = list(filter(lambda i: player.inventory_slots[i] == 0, slot_indices))
+            
+            if len(free_slots) == 0:
+                return
+
             player.inventory_items[object_type] = {"count": 1, "slot": free_slots[0]}
+            player.score += object_type.reward
             player.inventory_slots[free_slots[0]] = {"img": self.image, "type": object_type}
-            # check if inventory is full
-            if len(free_slots) == 1: # this slot is now used
-                GAME_END = "finished"
+    
         
         sprite_group.remove(self)
        
@@ -100,44 +103,33 @@ class Monster(Block):
 
 class Herb(Collectible):
 
+    def __init__(self, x, y):
+        image = pygame.image.load(f"{IMG_DIR}herb/{type(self).__name__}.png").convert_alpha()
+        super().__init__(x, y, image)
+    
+        
+class Nitrobloom(Herb):
+
     reward = 5
 
-    def __init__(self, x, y):
-        image = pygame.image.load(os.path.join(IMG_DIR, "herb.png")).convert_alpha()
-        super().__init__(x, y,image)
-        self.name = "herb"
+class DreamPlume(Herb):
 
-        self.description_lines = [
-            "Habitat: Grows along methane lake edges, thrives in darkness",
-            "Appearance: Bioluminescent tendrils with soft cyan glow",
-            "Effect: Restores visibility during Titan's long night",
-            "Use: Craft light patches to reveal map areas or attract creatures",
-            f"Reward point: {Herb.reward}"
-        ]
+    reward = 10
 
-
-
-class Glowvine(Collectible):
+class Glowvine(Herb):
 
     reward = 15
 
-    def __init__(self, x, y):
-        image = pygame.image.load(os.path.join(IMG_DIR, "herb", "Glowvine.png")).convert_alpha()
-        super().__init__(x, y,image)
-        self.name = "Glowvine"
-        
+class ResonantMoss(Herb):
+    reward = 20
 
-        self.description_lines = [
-            "Habitat: Grows along methane lake edges, thrives in darkness",
-            "Appearance: Bioluminescent tendrils with soft cyan glow",
-            "Effect: Restores visibility during Titan's long night",
-            "Use: Craft light patches to reveal map areas or attract creatures",
-            f"Reward point: {Glowvine.reward}"
-        ]
+class IceburstFern(Herb):
+    reward = 10
+
+class FurnaceRoot(Herb):
+    reward = 20
 
 
-
-   
 
 
 class Bacteria(Collectible):
@@ -146,35 +138,25 @@ class Bacteria(Collectible):
 
     def __init__(self, x, y):
 
-        # print("Bacteria created")
-        image = pygame.image.load(os.path.join(IMG_DIR, "bacteria.png")).convert_alpha()
-        super().__init__(x, y,image)
-        self.name = "bactria"
-        self.description_lines = [
-            "Habitat: Grows along methane lake edges, thrives in darkness",
-            "Appearance: Bioluminescent tendrils with soft cyan glow",
-            "Effect: Restores visibility during Titan's long night",
-            "Use: Craft light patches to reveal map areas or attract creatures",
-            f"Reward point: {Bacteria.reward}"
-        ]
+        image = pygame.image.load(f"{IMG_DIR}bacteria.png").convert_alpha()
+        super().__init__(x, y, image)       
 
-   
-        
 
 class Mysterious(Block):
 
     def reveal(self, player):
+
+       
         # Create a creature object on the fly after user touched this block
-        object_type = random.choice(ITEMS[0:-1] + [Monster]) # excluding Mysterious
+        object_type = random.choice(MYSTERIOUS_CHOICES) # excluding Mysterious
+        if  object_type == Herb:
+            object_type = random.choice(HERB_CHOICES)
         new_obj = object_type(self.rect.x/TILE_SIZE, self.rect.y/TILE_SIZE)
         # replace old sprite with new one
         sprite_group.add(new_obj)
         sprite_group.remove(self)
 
-        if (isinstance(object_type, Monster)):
-            player.life_bar.update(5)
-
-        elif (isinstance(object_type, Collectible)): # put it to backpack
+        if isinstance(new_obj, Collectible): # put it to backpack
             new_obj.collect_item(player)
 
                     
@@ -186,7 +168,7 @@ class Player(Block):
         self.speed = DEFAULT_SPEED
         self.life_bar = LifeBar(max_life=100, x=10, y=10, width=200, height=20)
         self.inventory_items = {} # map object type to their slot and count
-        self.inventory_slots = [0] * int(len(ITEMS)/2) # 0 means slot is unused        
+        self.inventory_slots = [0] * int(len(HERB_CHOICES)//2 + 1) # 0 means slot is unused        
         self.score = 0
         self.load_sprites()
          # Animation variables
@@ -207,9 +189,9 @@ class Player(Block):
 
     def load_sprites(self):
         # Path to the sprite sheet
-        sprite_path_up = os.path.join(IMG_DIR, 'space_man_up.png')
-        sprite_path_down = os.path.join(IMG_DIR, 'space_man_down.png')
-        sprite_path_side = os.path.join(IMG_DIR, 'space_man_side.png')
+        sprite_path_up = f"{IMG_DIR}space_man_up.png"
+        sprite_path_down = f"{IMG_DIR}space_man_down.png"
+        sprite_path_side = f"{IMG_DIR}space_man_side.png"
         
         # Create sprite sheet object
         sprite_sheet_up = SpriteSheet(sprite_path_up)
@@ -278,14 +260,11 @@ class Player(Block):
          super().move(dx, dy)
     
 
-    
+module_name = sys.modules[__name__]
 
+MYSTERIOUS_CHOICES = [BaseTile, Block, Bacteria, Monster, Herb]
 
-ITEMS = [BaseTile, Block, Herb, Glowvine, Bacteria, Mysterious]
-
-
-        
- 
+HERB_CHOICES = [getattr(module_name, herb.split('/')[-1].split('.')[0]) for herb in glob.glob(f'{HERB_DIR}*')]
     
     
         

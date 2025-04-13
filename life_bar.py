@@ -1,10 +1,6 @@
 import pygame
 import sys
-import os  # You can remove this unless you're loading assets
 from constants import *
-
-# Initialize Pygame
-pygame.init()
 
 
 
