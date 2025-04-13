@@ -260,7 +260,6 @@ class Player(Block):
          super().move(dx, dy)
     
 
-module_name = sys.modules[__name__]
 
 MYSTERIOUS_CHOICES = [BaseTile, Block, Bacteria, Monster, Herb]
 
