@@ -264,7 +264,8 @@ module_name = sys.modules[__name__]
 
 MYSTERIOUS_CHOICES = [BaseTile, Block, Bacteria, Monster, Herb]
 
-HERB_CHOICES = [getattr(module_name, herb.split('/')[-1].split('.')[0]) for herb in glob.glob(f'{HERB_DIR}*')]
+
+HERB_CHOICES = [Nitrobloom, DreamPlume, Glowvine, ResonantMoss, IceburstFern, FurnaceRoot]
     
     
         
